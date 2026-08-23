@@ -1,0 +1,171 @@
+name: container-ci-cd
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: container-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  LOCAL_IMAGE: static-frontend:${{ github.sha }}
+  IMAGE_ARTIFACT: container-image-${{ github.sha }}
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Create production Dockerfile
+        shell: bash
+        run: |
+          cat > Dockerfile <<'DOCKERFILE'
+          FROM node:20.18.1-alpine AS build
+          WORKDIR /app
+          COPY package.json package-lock.json ./
+          RUN npm ci
+          COPY . .
+          RUN npm run build
+
+          FROM nginxinc/nginx-unprivileged:1.27.4-alpine AS runtime
+          COPY --from=build /app/dist/ /usr/share/nginx/html/
+          DOCKERFILE
+
+      - name: Build image
+        run: docker build --tag "${LOCAL_IMAGE}" .
+
+      - name: Export image
+        run: docker save "${LOCAL_IMAGE}" --output image.tar
+
+      - name: Upload built image
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.IMAGE_ARTIFACT }}
+          path: image.tar
+          retention-days: 1
+          if-no-files-found: error
+
+  test:
+    name: test
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.18.1
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run project tests when defined
+        run: npm test --if-present
+
+  scan:
+    name: scan
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download built image
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.IMAGE_ARTIFACT }}
+
+      - name: Load built image
+        run: docker load --input image.tar
+
+      - name: Scan image for high and critical vulnerabilities
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.LOCAL_IMAGE }}
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          vuln-type: os,library
+
+  push:
+    name: push
+    needs: scan
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download scanned image
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.IMAGE_ARTIFACT }}
+
+      - name: Load scanned image
+        run: docker load --input image.tar
+
+      - name: Authenticate to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to Azure Container Registry
+        run: az acr login --name "${{ vars.ACR_NAME }}"
+
+      - name: Tag and push commit image
+        shell: bash
+        run: |
+          TARGET_IMAGE="${{ vars.ACR_LOGIN_SERVER }}/${{ vars.IMAGE_NAME }}:${{ github.sha }}"
+          docker tag "${LOCAL_IMAGE}" "${TARGET_IMAGE}"
+          docker push "${TARGET_IMAGE}"
+
+  deploy:
+    name: deploy
+    needs: push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - name: Download the exact built and scanned image
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.IMAGE_ARTIFACT }}
+
+      - name: Load the exact built and scanned image
+        run: docker load --input image.tar
+
+      - name: Authenticate to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to Azure Container Registry
+        run: az acr login --name "${{ vars.ACR_NAME }}"
+
+      - name: Tag and push the exact commit image
+        shell: bash
+        run: |
+          TARGET_IMAGE="${{ vars.ACR_LOGIN_SERVER }}/${{ vars.IMAGE_NAME }}:${{ github.sha }}"
+          docker tag "${LOCAL_IMAGE}" "${TARGET_IMAGE}"
+          docker push "${TARGET_IMAGE}"
+
+      - name: Install or update the Container Apps CLI extension
+        run: az extension add --name containerapp --upgrade
+
+      - name: Deploy the exact commit image to Azure Container Apps
+        run: |
+          az containerapp update \
+            --name "${{ vars.CONTAINERAPP_NAME }}" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --image "${{ vars.ACR_LOGIN_SERVER }}/${{ vars.IMAGE_NAME }}:${{ github.sha }}"
