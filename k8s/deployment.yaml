@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: static-frontend
+  labels:
+    app.kubernetes.io/name: static-frontend
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: static-frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: static-frontend
+        app.kubernetes.io/component: frontend
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: frontend
+          # Reference manifest for portability only; not applied or substituted by CI.
+          # Azure Container Apps sets the real commit-pinned image directly with:
+          # az containerapp update --image <image>:<sha>
+          image: REPLACED_BY_PLATFORM
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 32Mi
+      terminationGracePeriodSeconds: 30
