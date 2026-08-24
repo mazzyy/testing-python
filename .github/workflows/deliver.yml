@@ -1,0 +1,155 @@
+name: Container CI/CD
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  LOCAL_IMAGE: ci-image:${{ github.sha }}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Create production Dockerfile
+        shell: bash
+        run: |
+          cat > Dockerfile <<'DOCKERFILE'
+          FROM node:20.18.1-alpine3.20 AS build
+          WORKDIR /app
+          COPY package.json package-lock.json ./
+          RUN npm ci
+          COPY . .
+          RUN npm run build
+
+          FROM alpine:3.20.3 AS runtime
+          RUN addgroup -S app && adduser -S -G app app \
+              && mkdir -p /srv/www \
+              && chown -R app:app /srv/www
+          COPY --from=build --chown=app:app /app/dist/ /srv/www/
+          USER app
+          EXPOSE 8080
+          CMD ["busybox", "httpd", "-f", "-p", "8080", "-h", "/srv/www"]
+          DOCKERFILE
+
+      - name: Build container image
+        run: docker build --tag "${LOCAL_IMAGE}" .
+
+      - name: Save built image
+        run: docker save --output image.tar "${LOCAL_IMAGE}"
+
+      - name: Upload built image
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-image-${{ github.sha }}
+          path: image.tar
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run tests and build validation
+        shell: bash
+        run: |
+          docker run --rm \
+            --volume "$PWD:/workspace" \
+            --workdir /workspace \
+            node:20.18.1-alpine3.20 \
+            sh -euc '
+              npm ci
+              if node -e "const p = require(\"./package.json\"); process.exit(p.scripts && p.scripts.test ? 0 : 1)"; then
+                npm test
+              else
+                echo "No test script is defined; using the production build as validation."
+              fi
+              npm run build
+            '
+
+  scan:
+    name: Scan
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Download built image
+        uses: actions/download-artifact@v4
+        with:
+          name: container-image-${{ github.sha }}
+          path: .
+
+      - name: Load built image
+        run: docker load --input image.tar
+
+      - name: Scan for high and critical vulnerabilities
+        run: |
+          docker run --rm \
+            --volume /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:0.58.2 image \
+            --exit-code 1 \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            "${LOCAL_IMAGE}"
+
+  push:
+    name: Push
+    runs-on: ubuntu-latest
+    needs: scan
+    if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+    steps:
+      - name: Download scanned image
+        uses: actions/download-artifact@v4
+        with:
+          name: container-image-${{ github.sha }}
+          path: .
+
+      - name: Load scanned image
+        run: docker load --input image.tar
+
+      - name: Authenticate to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to Azure Container Registry
+        run: az acr login --name "${{ vars.ACR_NAME }}"
+
+      - name: Tag and push commit image
+        env:
+          PUSHED_IMAGE: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.IMAGE_NAME }}:${{ github.sha }}
+        run: |
+          docker tag "${LOCAL_IMAGE}" "${PUSHED_IMAGE}"
+          docker push "${PUSHED_IMAGE}"
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: push
+    if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+    steps:
+      - name: Authenticate to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy exact commit image to Azure Container Apps
+        env:
+          PUSHED_IMAGE: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.IMAGE_NAME }}:${{ github.sha }}
+        run: |
+          az containerapp update \
+            --name "${{ vars.CONTAINERAPP_NAME }}" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --image "${PUSHED_IMAGE}"
