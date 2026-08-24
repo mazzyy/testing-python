@@ -4,12 +4,13 @@ metadata:
   name: static-frontend
   labels:
     app.kubernetes.io/name: static-frontend
+    app.kubernetes.io/component: frontend
 spec:
   type: ClusterIP
   selector:
     app.kubernetes.io/name: static-frontend
   ports:
     - name: http
-      port: 80
-      targetPort: http
       protocol: TCP
+      port: 8080
+      targetPort: http
