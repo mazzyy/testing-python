@@ -1,4 +1,4 @@
-name: Container CI/CD
+name: CI/CD
 
 on:
   push:
@@ -8,55 +8,38 @@ permissions:
   contents: read
 
 env:
-  LOCAL_IMAGE: local/static-frontend:${{ github.sha }}
+  LOCAL_IMAGE: local/vite-static:${{ github.sha }}
+  TARGET_IMAGE: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.IMAGE_NAME }}:${{ github.sha }}
 
 jobs:
   build:
-    name: build
+    name: Build container image
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Create production Dockerfile
-        shell: bash
-        run: |
-          cat > .ci.Dockerfile <<'EOF'
-          FROM node:22-alpine3.22 AS build
-          WORKDIR /app
-          COPY package.json package-lock.json ./
-          RUN npm ci
-          COPY . .
-          RUN npm run build
+      - name: Build image from Dockerfile
+        run: docker build --tag "$LOCAL_IMAGE" .
 
-          FROM alpine:3.22 AS runtime
-          RUN addgroup -S static && adduser -S -G static static
-          WORKDIR /srv
-          COPY --from=build --chown=static:static /app/dist/ /srv/
-          USER static
-          EXPOSE 8080
-          CMD ["busybox", "httpd", "-f", "-p", "8080", "-h", "/srv"]
-          EOF
-
-      - name: Build image
-        run: docker build --file .ci.Dockerfile --tag "$LOCAL_IMAGE" .
-
-      - name: Export image
-        run: docker save --output service-image.tar "$LOCAL_IMAGE"
+      - name: Save built image
+        run: docker save --output "${{ runner.temp }}/container-image.tar" "$LOCAL_IMAGE"
 
       - name: Upload built image
         uses: actions/upload-artifact@v4
         with:
-          name: service-image-${{ github.sha }}
-          path: service-image.tar
+          name: container-image-${{ github.sha }}
+          path: ${{ runner.temp }}/container-image.tar
           compression-level: 0
           retention-days: 1
           if-no-files-found: error
 
   test:
-    name: test
-    runs-on: ubuntu-latest
+    name: Test frontend
     needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -64,57 +47,59 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: 22
           cache: npm
 
-      - name: Install dependencies
+      - name: Install locked dependencies
         run: npm ci
 
-      - name: Run tests or build validation
-        shell: bash
+      - name: Run project tests when defined
+        run: npm test --if-present
+
+      - name: Verify production bundle
         run: |
-          if node -e "const p = require('./package.json'); process.exit(p.scripts && p.scripts.test ? 0 : 1)"; then
-            npm test
-          else
-            echo 'No test script is defined; validating the production build instead.'
-            npm run build
-          fi
+          npm run build
+          test -f dist/index.html
 
   scan:
-    name: scan
-    runs-on: ubuntu-latest
+    name: Scan container image
     needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Download built image
         uses: actions/download-artifact@v4
         with:
-          name: service-image-${{ github.sha }}
-          path: image-artifact
+          name: container-image-${{ github.sha }}
+          path: ${{ runner.temp }}
 
       - name: Load built image
-        run: docker load --input image-artifact/service-image.tar
+        run: docker load --input "${{ runner.temp }}/container-image.tar"
 
-      - name: Scan image for high and critical vulnerabilities
+      - name: Scan for high and critical vulnerabilities
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy:0.58.2 \
-            image --exit-code 1 --severity HIGH,CRITICAL "$LOCAL_IMAGE"
+            aquasec/trivy:0.58.2 image \
+            --exit-code 1 \
+            --severity HIGH,CRITICAL \
+            "$LOCAL_IMAGE"
 
   push:
-    name: push
-    runs-on: ubuntu-latest
+    name: Push image to Azure Container Registry
     needs: scan
     if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Download scanned image
         uses: actions/download-artifact@v4
         with:
-          name: service-image-${{ github.sha }}
-          path: image-artifact
+          name: container-image-${{ github.sha }}
+          path: ${{ runner.temp }}
 
       - name: Load scanned image
-        run: docker load --input image-artifact/service-image.tar
+        run: docker load --input "${{ runner.temp }}/container-image.tar"
 
       - name: Authenticate to Azure
         uses: azure/login@v2
@@ -124,27 +109,43 @@ jobs:
       - name: Log in to Azure Container Registry
         run: az acr login --name "${{ vars.ACR_NAME }}"
 
-      - name: Tag and push exact commit image
-        shell: bash
+      - name: Tag and push commit image
         run: |
-          TARGET_IMAGE="${{ vars.ACR_LOGIN_SERVER }}/${{ vars.IMAGE_NAME }}:${{ github.sha }}"
           docker tag "$LOCAL_IMAGE" "$TARGET_IMAGE"
           docker push "$TARGET_IMAGE"
 
   deploy:
-    name: deploy
-    runs-on: ubuntu-latest
+    name: Deploy to Azure Container Apps
     needs: push
     if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
+      - name: Download scanned image
+        uses: actions/download-artifact@v4
+        with:
+          name: container-image-${{ github.sha }}
+          path: ${{ runner.temp }}
+
+      - name: Load scanned image
+        run: docker load --input "${{ runner.temp }}/container-image.tar"
+
       - name: Authenticate to Azure
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy exact commit image to Azure Container Apps
+      - name: Log in to Azure Container Registry
+        run: az acr login --name "${{ vars.ACR_NAME }}"
+
+      - name: Ensure the exact scanned image is pushed
+        run: |
+          docker tag "$LOCAL_IMAGE" "$TARGET_IMAGE"
+          docker push "$TARGET_IMAGE"
+
+      - name: Update Azure Container App to the commit image
         run: |
           az containerapp update \
             --name "${{ vars.CONTAINERAPP_NAME }}" \
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
-            --image "${{ vars.ACR_LOGIN_SERVER }}/${{ vars.IMAGE_NAME }}:${{ github.sha }}"
+            --image "$TARGET_IMAGE"
