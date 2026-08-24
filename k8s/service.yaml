@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: static-frontend
+  labels:
+    app.kubernetes.io/name: static-frontend
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: static-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
