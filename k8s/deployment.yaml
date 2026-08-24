@@ -4,11 +4,11 @@ metadata:
   name: static-frontend
   labels:
     app.kubernetes.io/name: static-frontend
+    app.kubernetes.io/component: frontend
 spec:
   replicas: 2
   revisionHistoryLimit: 5
-  progressDeadlineSeconds: 600
-  minReadySeconds: 10
+  progressDeadlineSeconds: 300
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -21,20 +21,17 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: static-frontend
+        app.kubernetes.io/component: frontend
     spec:
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
-        runAsUser: 10001
-        runAsGroup: 10001
-        fsGroup: 10001
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: frontend
-          # REFERENCE-ONLY for portability; this manifest is not applied by CI. Azure Container Apps sets the real commit-pinned image directly with `az containerapp update --image <image>:<sha>`.
-          # Before any manual Kubernetes apply, replace this placeholder with that exact pushed image; never use `latest`.
-          image: REPLACED_BEFORE_MANUAL_KUBERNETES_APPLY
+        - name: static-frontend
+          # Reference manifest for portability — not applied by CI; Azure Container Apps sets the real commit-pinned image directly via az containerapp update --image <image>:<sha>.
+          image: REPLACED_BY_CI
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -42,23 +39,24 @@ spec:
               protocol: TCP
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 25m
+              memory: 32Mi
             limits:
               cpu: 250m
               memory: 128Mi
           readinessProbe:
             httpGet:
-              path: /
+              path: /healthz
               port: http
               scheme: HTTP
             initialDelaySeconds: 2
             periodSeconds: 5
             timeoutSeconds: 2
             failureThreshold: 3
+            successThreshold: 1
           livenessProbe:
             httpGet:
-              path: /
+              path: /healthz
               port: http
               scheme: HTTP
             initialDelaySeconds: 10
@@ -66,15 +64,24 @@ spec:
             timeoutSeconds: 2
             failureThreshold: 3
           securityContext:
+            runAsNonRoot: true
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
           volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
             - name: tmp
               mountPath: /tmp
       volumes:
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
         - name: tmp
-          emptyDir:
-            sizeLimit: 16Mi
+          emptyDir: {}
+      terminationGracePeriodSeconds: 30
