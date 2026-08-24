@@ -4,32 +4,21 @@ FROM node:22-alpine3.22 AS build
 
 WORKDIR /app
 
-# Install the lockfile-resolved build dependencies first for cache efficiency.
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
-# Copy only files required by the Vite build.
 COPY index.html ./
 COPY src/ ./src/
 
 RUN npm run build
 
-
 FROM alpine:3.22 AS runtime
 
 RUN apk add --no-cache nginx \
-    && mkdir -p \
-        /usr/share/nginx/html \
-        /tmp/nginx/client_temp \
-        /tmp/nginx/proxy_temp \
-        /tmp/nginx/fastcgi_temp \
-        /tmp/nginx/uwsgi_temp \
-        /tmp/nginx/scgi_temp \
-    && chown -R nginx:nginx /usr/share/nginx/html /tmp/nginx
-
-RUN cat > /etc/nginx/nginx.conf <<'EOF'
+    && rm -rf /usr/share/nginx/html/* \
+    && cat > /etc/nginx/nginx.conf <<'EOF'
 worker_processes auto;
-pid /tmp/nginx/nginx.pid;
+pid /tmp/nginx.pid;
 error_log /dev/stderr warn;
 
 events {
@@ -41,8 +30,8 @@ http {
     default_type application/octet-stream;
 
     access_log /dev/stdout;
-    server_tokens off;
     sendfile on;
+    server_tokens off;
 
     client_body_temp_path /tmp/nginx/client_temp;
     proxy_temp_path       /tmp/nginx/proxy_temp;
@@ -51,8 +40,10 @@ http {
     scgi_temp_path        /tmp/nginx/scgi_temp;
 
     server {
-        listen 8080;
+        listen 0.0.0.0:8080;
         listen [::]:8080;
+        server_name _;
+
         root /usr/share/nginx/html;
         index index.html;
 
