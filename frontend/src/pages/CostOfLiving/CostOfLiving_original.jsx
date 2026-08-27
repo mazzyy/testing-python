@@ -1763,8 +1763,8 @@ const GermanyCostOfLiving = () => {
                             "@type": "Article",
                             "headline": "Cost of Living in Germany for International Students",
                             "description": "Comprehensive guide to monthly expenses, rent, and student budget in Germany for 2024.",
-                            "author": { "@type": "Organization", "name": "UniAdvisorAI" },
-                            "publisher": { "@type": "Organization", "name": "UniAdvisorAI" }
+                            "author": { "@type": "Organization", "name": "CampusConsult" },
+                            "publisher": { "@type": "Organization", "name": "CampusConsult" }
                         },
                         {
                             "@type": "FAQPage",

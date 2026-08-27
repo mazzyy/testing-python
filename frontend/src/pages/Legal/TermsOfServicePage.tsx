@@ -5,14 +5,14 @@ const TermsOfServicePage = () => {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-surface-900 py-12 px-4 sm:px-6 lg:px-8">
             <SEO
-                title="Terms of Service - UniAdvisorAI"
-                description="Terms of service and usage guidelines for UniAdvisorAI."
-                keywords={['terms of service', 'user agreement', 'legal', 'UniAdvisorAI terms', 'conditions of use']}
+                title="Terms of Service - CampusConsult"
+                description="Terms of service and usage guidelines for CampusConsult."
+                keywords={['terms of service', 'user agreement', 'legal', 'CampusConsult terms', 'conditions of use']}
                 schema={{
                     "@context": "https://schema.org",
                     "@type": "WebPage",
                     "name": "Terms of Service",
-                    "description": "UniAdvisorAI Terms of Service and Usage Guidelines",
+                    "description": "CampusConsult Terms of Service and Usage Guidelines",
                     "url": "https://uniadvisorai.com/terms-of-service"
                 }}
             />
@@ -28,7 +28,7 @@ const TermsOfServicePage = () => {
                     </div>
                     <h1 className="text-4xl font-bold mb-4">Terms of Service</h1>
                     <p className="text-primary-100 text-lg max-w-2xl">
-                        Please read these terms carefully before using UniAdvisorAI. They outline what you can expect from us and what we expect from you.
+                        Please read these terms carefully before using CampusConsult. They outline what you can expect from us and what we expect from you.
                     </p>
                     <div className="mt-6 text-sm text-primary-200">
                         Last Updated: February 2026
@@ -45,7 +45,7 @@ const TermsOfServicePage = () => {
                             Agreement to Terms
                         </h2>
                         <p className="mb-4">
-                            By accessing or using <strong>UniAdvisorAI</strong> (the "Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of the terms, you may not access the Service.
+                            By accessing or using <strong>CampusConsult</strong> (the "Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of the terms, you may not access the Service.
                         </p>
                     </section>
 
@@ -60,7 +60,7 @@ const TermsOfServicePage = () => {
                                 Your Dedicated Digital Assistant
                             </p>
                             <p className="text-gray-600 dark:text-gray-400">
-                                UniAdvisorAI provides an intelligent, AI-powered platform designed to streamline your journey to German universities. We act as your educational coin-pilot, helping you find programs, track applications, and optimize your profile for success.
+                                CampusConsult provides an intelligent, AI-powered platform designed to streamline your journey to German universities. We act as your educational coin-pilot, helping you find programs, track applications, and optimize your profile for success.
                             </p>
                         </div>
                     </section>
@@ -128,7 +128,7 @@ const TermsOfServicePage = () => {
                         </h2>
                         <div className="bg-gray-50 dark:bg-surface-900 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
                             <p className="text-gray-600 dark:text-gray-400 mb-4">
-                                To the maximum extent permitted by law, UniAdvisorAI shall not be liable for indirect damages, loss of profits, or data.
+                                To the maximum extent permitted by law, CampusConsult shall not be liable for indirect damages, loss of profits, or data.
                             </p>
                             <div className="flex items-start gap-3 text-sm text-gray-500 dark:text-gray-400">
                                 <AlertTriangle className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />

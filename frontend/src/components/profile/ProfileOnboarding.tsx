@@ -84,7 +84,7 @@ const journeySteps = [
         gradient: "linear-gradient(135deg, #f59e0b, #ea580c)",
         accentColor: "#f59e0b",
         bgPattern: "radial-gradient(circle at 20% 80%, rgba(245,158,11,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(234,88,12,0.06) 0%, transparent 50%)",
-        title: "Welcome to UniAdvisorAI!",
+        title: "Welcome to CampusConsult!",
         subtitle: "Your German Study Journey Starts Here",
         description: "We'll guide you through every step — from finding the perfect program to landing in Germany.",
         features: [

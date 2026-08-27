@@ -5,14 +5,14 @@ const PrivacyPolicyPage = () => {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-surface-900 py-12 px-4 sm:px-6 lg:px-8">
             <SEO
-                title="Privacy Policy - UniAdvisorAI"
-                description="Learn how UniAdvisorAI collects, uses, and protects your personal data in compliance with GDPR."
-                keywords={['privacy policy', 'GDPR compliance', 'data protection', 'UniAdvisorAI privacy', 'student data security']}
+                title="Privacy Policy - CampusConsult"
+                description="Learn how CampusConsult collects, uses, and protects your personal data in compliance with GDPR."
+                keywords={['privacy policy', 'GDPR compliance', 'data protection', 'CampusConsult privacy', 'student data security']}
                 schema={{
                     "@context": "https://schema.org",
                     "@type": "WebPage",
                     "name": "Privacy Policy",
-                    "description": "UniAdvisorAI Privacy Policy and GDPR Compliance",
+                    "description": "CampusConsult Privacy Policy and GDPR Compliance",
                     "url": "https://uniadvisorai.com/privacy-policy"
                 }}
             />
@@ -45,7 +45,7 @@ const PrivacyPolicyPage = () => {
                             Introduction
                         </h2>
                         <p className="mb-4">
-                            Welcome to <strong>UniAdvisorAI</strong> ("we," "our," or "us"). We are committed to protecting your personal data and respecting your privacy. This Privacy Policy explains how we collect, use, store, and share your personal data when you use our website and AI-powered university application assistant services (the "Service").
+                            Welcome to <strong>CampusConsult</strong> ("we," "our," or "us"). We are committed to protecting your personal data and respecting your privacy. This Privacy Policy explains how we collect, use, store, and share your personal data when you use our website and AI-powered university application assistant services (the "Service").
                         </p>
                         <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
                             <p className="text-blue-800 text-sm font-medium">

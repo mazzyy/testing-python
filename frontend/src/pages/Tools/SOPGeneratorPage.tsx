@@ -46,7 +46,7 @@ interface UniversityOption {
 const schema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "UniAdvisorAI SOP Generator",
+    "name": "CampusConsult SOP Generator",
     "url": "https://www.uniadvisorai.com/tools/sop-generator",
     "description": "Free AI-powered Statement of Purpose generator tailored for German university applications. Generates personalized, human-like SOPs in 60 seconds.",
     "applicationCategory": "EducationalApplication",
@@ -59,7 +59,7 @@ const schema = {
     },
     "author": {
         "@type": "Organization",
-        "name": "UniAdvisorAI",
+        "name": "CampusConsult",
         "url": "https://www.uniadvisorai.com"
     }
 };
@@ -81,7 +81,7 @@ const faqSchema = {
             "name": "Is this SOP generator free?",
             "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Yes, the UniAdvisorAI SOP Generator is completely free to use for international students applying to German universities. There is no sign-up required for basic usage, and you can generate unlimited SOPs."
+                "text": "Yes, the CampusConsult SOP Generator is completely free to use for international students applying to German universities. There is no sign-up required for basic usage, and you can generate unlimited SOPs."
             }
         },
         {
@@ -431,7 +431,7 @@ export default function SOPGeneratorPage() {
             const url = URL.createObjectURL(pdfBlob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `SOP_${selectedUniversity || 'UniAdvisorAI'}.pdf`;
+            link.download = `SOP_${selectedUniversity || 'CampusConsult'}.pdf`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -474,7 +474,7 @@ export default function SOPGeneratorPage() {
         });
 
         const blob = await Packer.toBlob(doc);
-        saveAs(blob, "SOP_UniAdvisorAI.docx");
+        saveAs(blob, "SOP_CampusConsult.docx");
     };
 
     const handleSaveToVault = async () => {
@@ -503,7 +503,7 @@ export default function SOPGeneratorPage() {
     return (
         <>
             <SEO
-                title="Free AI SOP Generator 2025 — Statement of Purpose for German Universities | UniAdvisorAI"
+                title="Free AI SOP Generator 2025 — Statement of Purpose for German Universities | CampusConsult"
                 description="Generate a professional, human-like Statement of Purpose in 60 seconds. Tailored for TU9, TU Munich, RWTH Aachen & 400+ German universities — free, no sign-up required."
                 keywords={['SOP generator', 'statement of purpose Germany', 'SOP for German university', 'scholarship SOP', 'statement of purpose AI', 'university application essay', 'motivation letter generator', 'motivationsschreiben generator']}
                 schema={combinedSchema}

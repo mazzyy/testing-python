@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
     Home, FileCheck, Building2, AlertTriangle, ShieldCheck, Mail,
     CheckCircle2, ArrowRight, Clock, BookOpen, Globe, CreditCard,
-    Users, Search, MapPin, Shield, FileText, ExternalLink, ChevronUp,
+    Search, MapPin, Shield, FileText, ChevronUp,
     Lightbulb, Landmark, GraduationCap, HeartPulse, Banknote
 } from 'lucide-react';
 import SEO from '../../components/common/SEO';
@@ -29,7 +29,7 @@ export default function SurvivalGuidesPage() {
     const [activeSection, setActiveSection] = useState('housing');
     const [showBackToTop, setShowBackToTop] = useState(false);
     const [tocOpen, setTocOpen] = useState(false);
-    const observerRef = useRef(null);
+    const observerRef = useRef<IntersectionObserver | null>(null);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -51,7 +51,7 @@ export default function SurvivalGuidesPage() {
 
         TOC_SECTIONS.forEach(({ id }) => {
             const el = document.getElementById(id);
-            if (el) observerRef.current.observe(el);
+            if (el) observerRef.current?.observe(el);
         });
 
         return () => {
@@ -60,7 +60,7 @@ export default function SurvivalGuidesPage() {
         };
     }, []);
 
-    const scrollToSection = (id) => {
+    const scrollToSection = (id: string) => {
         const el = document.getElementById(id);
         if (el) {
             const yOffset = -100;
@@ -85,7 +85,7 @@ export default function SurvivalGuidesPage() {
         "@type": "Article",
         "headline": "The Ultimate Survival Guide for International Students in Germany (2025)",
         "description": "The complete guide to beating the German housing crisis, surviving the Ausländerbehörde, navigating health insurance, and finding direct application universities without Uni-Assist fees.",
-        "author": { "@type": "Organization", "name": "UniAdvisorAI" },
+        "author": { "@type": "Organization", "name": "CampusConsult" },
         "datePublished": "2025-01-15",
         "dateModified": "2025-06-01"
     };
@@ -780,11 +780,11 @@ export default function SurvivalGuidesPage() {
 // REUSABLE COMPONENTS
 // ═══════════════════════════════════════════
 
-function SectionAnchor({ id }) {
+function SectionAnchor({ id }: { id: string }) {
     return <div id={id} className="scroll-mt-28" />;
 }
 
-function PartBadge({ number, label }) {
+function PartBadge({ number, label }: { number: string | number; label: string }) {
     return (
         <div className="inline-flex items-center gap-2 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 px-3 py-1.5 rounded-lg font-semibold text-xs uppercase tracking-wider mb-4 border border-primary-100 dark:border-primary-900/30">
             Part {number} — {label}
@@ -792,7 +792,7 @@ function PartBadge({ number, label }) {
     );
 }
 
-function NumberBadge({ n }) {
+function NumberBadge({ n }: { n: string | number }) {
     return (
         <span className="w-9 h-9 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center text-sm font-bold shrink-0">
             {n}
@@ -800,7 +800,7 @@ function NumberBadge({ n }) {
     );
 }
 
-function InfoCard({ title, content, variant = 'neutral' }) {
+function InfoCard({ title, content, variant = 'neutral' }: { title: string; content: string; variant?: 'neutral' | 'primary' }) {
     const styles = {
         neutral: 'bg-gray-50 dark:bg-surface-900 border-gray-100 dark:border-surface-700 text-gray-900 dark:text-white',
         primary: 'bg-primary-50 dark:bg-primary-900/10 border-primary-100 dark:border-primary-900/30 text-primary-900 dark:text-primary-400',
@@ -817,7 +817,7 @@ function InfoCard({ title, content, variant = 'neutral' }) {
     );
 }
 
-function PlatformCard({ name, url, desc, tier, tierColor }) {
+function PlatformCard({ name, url, desc, tier, tierColor }: { name: string; url: string; desc: string; tier: string; tierColor: 'emerald' | 'blue' | 'amber' | 'violet' }) {
     const colorMap = {
         emerald: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400',
         blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',

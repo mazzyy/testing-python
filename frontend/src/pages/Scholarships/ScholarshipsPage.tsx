@@ -212,7 +212,7 @@ export default function ScholarshipsPage() {
     return (
         <div className="page-container py-8">
             <SEO
-                title={eligibilityMode ? 'Your Eligible Scholarships — Matched to Your Profile | UniAdvisorAI' : 'Fully Funded Scholarships in Germany for International Students (2026)'}
+                title={eligibilityMode ? 'Your Eligible Scholarships — Matched to Your Profile | CampusConsult' : 'Fully Funded Scholarships in Germany for International Students (2026)'}
                 description="Find the best DAAD, merit-based, and university-specific scholarships for international students in Germany. Check your eligibility and apply today."
                 keywords={['scholarships germany', 'DAAD scholarship', 'german scholarship 2026', 'Deutschlandstipendium', 'funding for students', 'study in germany free']}
                 schema={schema}

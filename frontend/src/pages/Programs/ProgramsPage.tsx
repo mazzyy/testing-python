@@ -104,7 +104,7 @@ export default function ProgramsPage() {
   return (
     <div className="page-container py-8">
       <SEO
-        title="Browse 10,000+ German University Programs — Tuition-Free 2025 | UniAdvisorAI"
+        title="Browse 10,000+ German University Programs — Tuition-Free 2025 | CampusConsult"
         description="Search and filter Bachelor's, Master's & PhD programs across 400+ German universities. Find English-taught, tuition-free courses with scholarship opportunities. Updated for 2025 intake."
         keywords={['german university programs', 'english taught masters germany', 'study in germany courses', 'tuition free universities germany']}
         schema={schema}

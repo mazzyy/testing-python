@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, Eye, EyeOff, GraduationCap } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import novaToast from '../../components/nova/NovaToast';
 import { useQuery } from '@tanstack/react-query';
 import { programsApi } from '../../api';
@@ -9,6 +9,7 @@ import { useAuthStore } from '../../store/authStore';
 import type { LoginCredentials } from '../../types';
 import { Button, Input } from '../../components/ui';
 import SEO from '../../components/common/SEO';
+import { LogoMark } from '../../components/common/Logo';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -52,8 +53,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       <SEO
-        title="Login | UniAdvisorAI"
-        description="Log in to your UniAdvisorAI account to access personalized program recommendations and application tracking."
+        title="Login | CampusConsult"
+        description="Log in to your CampusConsult account to access personalized program recommendations and application tracking."
         keywords={['login', 'sign in', 'student portal', 'uniadvisorai login']}
       />
       {/* Left side - Form */}
@@ -61,11 +62,9 @@ export default function LoginPage() {
         <div className="max-w-md w-full">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/20">
-              <GraduationCap className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-xl text-surface-900 dark:text-white">
-              Uni<span className="text-primary-600">Advisor</span>
+            <LogoMark className="w-10 h-10 rounded-xl shadow-lg shadow-primary-500/20" idSuffix="auth" />
+            <span className="font-bold text-xl">
+              <span className="text-surface-900 dark:text-white">Campus</span><span className="text-primary-600 dark:text-primary-400">Consult</span>
             </span>
           </Link>
 

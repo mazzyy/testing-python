@@ -31,8 +31,8 @@ export default function AboutUsPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-surface-900 dark:via-surface-900 dark:to-surface-800">
             <SEO
-                title="About UniAdvisorAI — Our Mission to Simplify Studying in Germany"
-                description="UniAdvisorAI is a free AI-powered platform helping international students navigate German university applications, scholarships, visas & more. Meet the team behind the tools."
+                title="About CampusConsult — Our Mission to Simplify Studying in Germany"
+                description="CampusConsult is a free AI-powered platform helping international students navigate German university applications, scholarships, visas & more. Meet the team behind the tools."
                 keywords={['about uniadvisorai', 'study in germany platform', 'AI education consultant', 'AI university match', 'free study abroad tools']}
             />
 
@@ -112,7 +112,7 @@ export default function AboutUsPage() {
                                 Navigating the complexities of international university applications can be overwhelming. From understanding minimum GPA requirements to deciphering visa processes and calculating the true cost of living, students often find themselves lost in a sea of fragmented, outdated information.
                             </p>
                             <p>
-                                UniAdvisorAI was born out of this frustration. We recognized that while Germany offers some of the world's best tuition-free education, the barrier to entry isn't academic capability—it's informational clarity.
+                                CampusConsult was born out of this frustration. We recognized that while Germany offers some of the world's best tuition-free education, the barrier to entry isn't academic capability—it's informational clarity.
                             </p>
                             <p>
                                 By combining advanced artificial intelligence with an exhaustive database of German public and private universities, we've created a platform that doesn't just list programs; it intelligently matches you with the institutions where you're most likely to thrive and get accepted.

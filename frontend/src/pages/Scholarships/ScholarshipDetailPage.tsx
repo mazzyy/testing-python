@@ -102,7 +102,7 @@ export default function ScholarshipDetailPage() {
         "description": scholarship.objective || scholarship.title,
         "provider": {
             "@type": "Organization",
-            "name": "UniAdvisorAI" // Ideally this would be the actual provider if available
+            "name": "CampusConsult" // Ideally this would be the actual provider if available
         },
         "url": window.location.href,
         "deadline": scholarship.deadline,

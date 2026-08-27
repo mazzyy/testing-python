@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, Eye, EyeOff, User, GraduationCap, Check } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, Check } from 'lucide-react';
 import novaToast from '../../components/nova/NovaToast';
 import { useAuthStore } from '../../store/authStore';
 import type { RegisterData } from '../../types';
 import { Button, Input } from '../../components/ui';
 import SEO from '../../components/common/SEO';
+import { LogoMark } from '../../components/common/Logo';
 
 interface RegisterFormData extends RegisterData {
   confirmPassword: string;
@@ -51,8 +52,8 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex">
       <SEO
-        title="Create Account | UniAdvisorAI"
-        description="Sign up for UniAdvisorAI to get free AI-powered university recommendations for studying in Germany."
+        title="Create Account | CampusConsult"
+        description="Sign up for CampusConsult to get free AI-powered university recommendations for studying in Germany."
         keywords={['register', 'sign up', 'create account', 'study in germany free']}
       />
       {/* Left side - Image/Decoration */}
@@ -89,11 +90,9 @@ export default function RegisterPage() {
         <div className="max-w-md w-full">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/20">
-              <GraduationCap className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-xl text-surface-900 dark:text-white">
-              Uni<span className="text-primary-600">Advisor</span>
+            <LogoMark className="w-10 h-10 rounded-xl shadow-lg shadow-primary-500/20" idSuffix="auth" />
+            <span className="font-bold text-xl">
+              <span className="text-surface-900 dark:text-white">Campus</span><span className="text-primary-600 dark:text-primary-400">Consult</span>
             </span>
           </Link>
 

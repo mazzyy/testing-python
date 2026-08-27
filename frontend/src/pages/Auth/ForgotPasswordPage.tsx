@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-surface-900 py-12 px-4 sm:px-6 lg:px-8">
-            <SEO title="Forgot Password | UniAdvisorAI" description="Reset your password." />
+            <SEO title="Forgot Password | CampusConsult" description="Reset your password." />
             <div className="max-w-md w-full space-y-8 bg-white dark:bg-surface-800 p-8 rounded-xl shadow-lg">
                 <div>
                     <div className="mx-auto h-12 w-12 bg-primary-100 rounded-full flex items-center justify-center">

@@ -1,51 +1,58 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { motion, useInView } from 'framer-motion';
 import {
   Sparkles,
-  FileText,
-  Target,
   ArrowRight,
-  Building2,
   Check,
-  Award,
   Menu,
   X,
-  ChevronDown,
+  Sun,
+  Moon,
   Calculator,
-  Coins,
-  CreditCard,
   FileEdit,
-  Users,
-  BookOpen,
-  Briefcase,
   FileSearch,
-  ClipboardList,
-  HelpCircle,
-  GraduationCap,
-  MapPin,
-  ChevronRight,
+  Award,
+  Coins,
   Plane,
-  Zap,
-  Globe,
+  Building2,
+  Target,
+  ClipboardList,
+  ShieldCheck,
+  Clock,
+  BadgeCheck,
+  MapPin,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { programsApi } from '../../api';
-import Button from '../../components/ui/Button';
+import { useThemeStore } from '../../store/themeStore';
 import SEO from '../../components/common/SEO';
 import Footer from '../../components/layout/Footer';
+import Logo from '../../components/common/Logo';
+import costHeatmap from '../../assets/images/germany_cost_heatmap.webp';
 
-// ─── Animated Section Wrapper ───────────────────────────────────────
-function RevealSection({ children, className = '', delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) {
+/* ─────────────────────────────────────────────────────────────
+   Helpers
+   ───────────────────────────────────────────────────────────── */
+
+function Reveal({
+  children,
+  className = '',
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-80px' });
+  const inView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 48 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 48 }}
-      transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}
+      initial={{ opacity: 0, y: 32 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 32 }}
+      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
       className={className}
     >
       {children}
@@ -53,131 +60,191 @@ function RevealSection({ children, className = '', delay = 0 }: { children: Reac
   );
 }
 
-// ─── Animated Counter ───────────────────────────────────────────────
-function AnimatedCounter({ value, suffix = '+' }: { value: number, suffix?: string }) {
+function Counter({ value, suffix = '+' }: { value: number; suffix?: string }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-  const [count, setCount] = useState(0);
+  const inView = useInView(ref, { once: true });
+  const [n, setN] = useState(0);
 
   useEffect(() => {
-    if (!isInView || !value) return;
-    const duration = 1500;
-    const steps = 40;
-    const increment = value / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= value) {
-        setCount(value);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(current));
-      }
-    }, duration / steps);
-    return () => clearInterval(timer);
-  }, [isInView, value]);
+    if (!inView || !value) return;
+    const duration = 1400;
+    const start = performance.now();
+    let frame: number;
+
+    const tick = (now: number) => {
+      const p = Math.min((now - start) / duration, 1);
+      setN(Math.floor(value * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [inView, value]);
+
+  // Stats come from the API — show a placeholder rather than a misleading "0+"
+  if (!value) {
+    return (
+      <span ref={ref} className="text-surface-300 dark:text-surface-700">
+        &mdash;
+      </span>
+    );
+  }
 
   return (
     <span ref={ref}>
-      {count.toLocaleString()}{suffix}
+      {n.toLocaleString()}
+      {suffix}
     </span>
   );
 }
 
-// ─── Section Header Component ───────────────────────────────────────
-function SectionHeader({ badge, badgeIcon: BadgeIcon, badgeColor = 'bg-primary-100 text-primary-700', title, highlight, description }: { badge?: string | React.ReactNode, badgeIcon?: React.ElementType, badgeColor?: string, title: string | React.ReactNode, highlight?: string | React.ReactNode, description?: string | React.ReactNode }) {
+/** Screenshot in a neutral browser chrome, so product shots read as product shots. */
+function Screenshot({ src, alt }: { src: string; alt: string }) {
   return (
-    <div className="text-center mb-16 md:mb-20">
-      {badge && (
-        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-5 ${badgeColor}`}>
-          {BadgeIcon && <BadgeIcon className="w-4 h-4" />}
-          {badge}
-        </div>
-      )}
-      <h2 className="text-3xl md:text-4xl lg:text-[2.75rem] font-extrabold text-surface-900 mb-5 leading-tight tracking-tight">
-        {title}{' '}
-        {highlight && <span className="gradient-text">{highlight}</span>}
-      </h2>
-      {description && (
-        <p className="text-lg text-surface-500 max-w-2xl mx-auto leading-relaxed">
-          {description}
-        </p>
-      )}
+    <div className="rounded-2xl overflow-hidden border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 shadow-2xl shadow-surface-900/10 dark:shadow-black/40">
+      <div className="flex items-center gap-1.5 px-4 py-3 bg-surface-100 dark:bg-surface-800 border-b border-surface-200 dark:border-surface-700">
+        <span className="w-2.5 h-2.5 rounded-full bg-surface-300 dark:bg-surface-600" />
+        <span className="w-2.5 h-2.5 rounded-full bg-surface-300 dark:bg-surface-600" />
+        <span className="w-2.5 h-2.5 rounded-full bg-surface-300 dark:bg-surface-600" />
+        <span className="ml-3 h-5 w-full max-w-[13rem] rounded-md bg-white dark:bg-surface-900" />
+      </div>
+      <img src={src} alt={alt} loading="lazy" decoding="async" className="block w-full" />
     </div>
   );
 }
 
-// ─── FAQ Accordion Item ─────────────────────────────────────────────
-function FAQItem({ question, answer, index }: { question: string, answer: React.ReactNode, index: number }) {
-  const [isOpen, setIsOpen] = useState(false);
+/* ─────────────────────────────────────────────────────────────
+   Content
+   ───────────────────────────────────────────────────────────── */
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
-      className="group"
-    >
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between p-6 text-left rounded-2xl border transition-all duration-300 ${isOpen
-          ? 'bg-primary-50 border-primary-200 shadow-md shadow-primary-500/5'
-          : 'bg-white border-surface-100 hover:border-surface-200 hover:shadow-sm'
-          }`}
-        aria-expanded={isOpen}
-      >
-        <h3 className={`font-semibold pr-4 transition-colors ${isOpen ? 'text-primary-700' : 'text-surface-900'}`}>
-          {question}
-        </h3>
-        <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen ? 'bg-primary-600 rotate-180' : 'bg-surface-100 group-hover:bg-surface-200'
-          }`}>
-          <ChevronDown className={`w-4 h-4 transition-colors ${isOpen ? 'text-white' : 'text-surface-500'}`} />
-        </div>
-      </button>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden"
-          >
-            <div className="px-6 pt-2 pb-4">
-              <p className="text-surface-600 leading-relaxed">{answer}</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
+const navLinks = [
+  { name: 'Programs', path: '/programs' },
+  { name: 'Universities', path: '/universities' },
+  { name: 'Scholarships', path: '/scholarships' },
+  { name: 'Cost of Living', path: '/cost-of-living' },
+];
 
-// ═══════════════════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════
+const toolLinks = [
+  { name: 'SOP Generator', path: '/tools/sop-generator', icon: FileEdit },
+  { name: 'CV Generator', path: '/tools/cv-generator', icon: FileSearch },
+  { name: 'Grade Calculator', path: '/german-grade-calculator', icon: Calculator },
+  { name: 'Visa Guide', path: '/visa-guide', icon: Plane },
+  { name: 'Survival Guides', path: '/tools/survival-guides', icon: ClipboardList },
+];
+
+const showcase = [
+  {
+    eyebrow: 'AI matching',
+    icon: Target,
+    title: 'Programs you can actually get into',
+    body: 'Describe your background once. The advisor reads your grades, degree and language level, then ranks German programs by fit — with degree, field, language and GPA checked off individually, so you can see why each one matched.',
+    points: ['Match score per program', 'Eligibility gaps flagged upfront', 'Follow-up questions in chat'],
+    image: '/features/ai-matching.webp',
+    to: '/programs',
+    cta: 'Browse programs',
+  },
+  {
+    eyebrow: 'Application tracker',
+    icon: ClipboardList,
+    title: 'Every deadline on one board',
+    body: 'Shortlist, documents, uni-assist status, portal logins and visa appointment in a single view. Nothing lives in a spreadsheet you forget to open.',
+    points: ['Stage-by-stage progress', 'Document checklist per university', 'Deadline reminders'],
+    image: '/features/application-tracker.webp',
+    to: '/applications',
+    cta: 'See the tracker',
+  },
+  {
+    eyebrow: 'Documents',
+    icon: FileEdit,
+    title: 'SOP and CV, drafted for the program',
+    body: 'Generates a statement of purpose and a German-format CV from your profile, tailored to the specific program — then lets you edit every paragraph before you export.',
+    points: ['Program-specific drafts', 'German CV conventions', 'Export to PDF or Word'],
+    image: '/features/sop-generator.webp',
+    to: '/tools/sop-generator',
+    cta: 'Try the SOP generator',
+  },
+  {
+    eyebrow: 'Funding',
+    icon: Award,
+    title: 'Scholarships filtered to you',
+    body: 'DAAD, Erasmus+, foundation and state scholarships matched against your nationality, field and level — with deadlines and eligibility, not a list you have to read yourself.',
+    points: ['Nationality-aware filtering', 'Deadline tracking', 'Direct application links'],
+    image: '/features/scholarship-finder.webp',
+    to: '/scholarships',
+    cta: 'Find scholarships',
+  },
+];
+
+const extras = [
+  {
+    icon: Plane,
+    title: 'Visa & arrival',
+    body: 'Country-specific document checklists, appointment timelines and what happens in your first month.',
+    to: '/visa-guide',
+  },
+  {
+    icon: Calculator,
+    title: 'Grade conversion',
+    body: 'Convert your GPA to the German 1.0–4.0 scale with the modified Bavarian formula.',
+    to: '/german-grade-calculator',
+  },
+  {
+    icon: ClipboardList,
+    title: 'Survival guides',
+    body: 'Anmeldung, blocked accounts, health insurance, SIM cards — the admin no one warns you about.',
+    to: '/tools/survival-guides',
+  },
+];
+
+const steps = [
+  { n: '01', title: 'Build your profile', body: 'Grades, degree, language level, budget and what you want to study. About five minutes.' },
+  { n: '02', title: 'Get matched', body: 'The AI searches thousands of German programs and returns the ones that fit, with eligibility flagged.' },
+  { n: '03', title: 'Apply and track', body: 'Generate your documents, follow the checklist, and watch every deadline from one dashboard.' },
+];
+
+const comingSoon = [
+  { flag: '🇹🇷', name: 'Turkey' },
+  { flag: '🇳🇱', name: 'Netherlands' },
+  { flag: '🇦🇹', name: 'Austria' },
+  { flag: '🇵🇱', name: 'Poland' },
+  { flag: '🇷🇺', name: 'Russia' },
+  { flag: '🇪🇬', name: 'Egypt' },
+  { flag: '🇺🇦', name: 'Ukraine' },
+  { flag: '🇮🇩', name: 'Indonesia' },
+];
+
+const faqs = [
+  {
+    q: 'Is CampusConsult really free?',
+    a: 'Yes. Every feature — AI recommendations, the application tracker, SOP and CV generation, scholarship matching, the grade calculator and the visa guides — is free. There is no card required, no trial that expires and no premium tier hidden behind the good features.',
+  },
+  {
+    q: 'How is that possible when consultants charge thousands?',
+    a: 'Agencies charge for time. CampusConsult does the same research with AI over a database of German programs, so the marginal cost of helping one more student is close to nothing.',
+  },
+  {
+    q: 'Which countries does it cover?',
+    a: 'Germany is fully covered today — programs, universities, scholarships, cost of living, visa process and application steps. Turkey, the Netherlands, Austria, Poland, Russia, Egypt, Ukraine and Indonesia are in progress.',
+  },
+  {
+    q: 'Do I need to speak German?',
+    a: 'Not for many programs. Germany has thousands of English-taught Bachelor and Master degrees, and the search lets you filter by teaching language and by the certificate you already hold.',
+  },
+  {
+    q: 'Who is it for?',
+    a: 'International students applying to German universities — school leavers heading into a Bachelor, graduates going for a Master or PhD, and career switchers using a German degree to move fields.',
+  },
+];
+
+/* ─────────────────────────────────────────────────────────────
+   Page
+   ───────────────────────────────────────────────────────────── */
+
 export default function LandingPage() {
-  const navigate = useNavigate();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const heroRef = useRef(null);
-
-  // Track scroll for header styling
-  useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handler, { passive: true });
-    return () => window.removeEventListener('scroll', handler);
-  }, []);
-
-  // Close mobile menu on resize
-  useEffect(() => {
-    const handler = () => {
-      if (window.innerWidth >= 768) setIsMobileMenuOpen(false);
-    };
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const { theme, toggleTheme } = useThemeStore();
 
   const { data: stats } = useQuery({
     queryKey: ['program-stats'],
@@ -185,374 +252,79 @@ export default function LandingPage() {
     staleTime: 1000 * 60 * 30,
   });
 
-  // ─── Data ──────────────────────────────────────────────────────
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-  const features = [
-    {
-      icon: Sparkles,
-      title: 'AI-Powered Recommendations',
-      description: 'Get personalized program suggestions based on your academic profile and career goals.',
-      color: 'from-violet-500 to-purple-600',
-      bgLight: 'bg-violet-50',
-    },
-    {
-      icon: Award,
-      title: 'Scholarship Finder',
-      description: 'Discover scholarships and German funding organizations matched to your profile.',
-      color: 'from-amber-500 to-orange-600',
-      bgLight: 'bg-amber-50',
-    },
-    {
-      icon: Target,
-      title: 'Match Scoring',
-      description: 'See how well you match each program with detailed compatibility breakdowns.',
-      color: 'from-emerald-500 to-teal-600',
-      bgLight: 'bg-emerald-50',
-    },
-    {
-      icon: FileText,
-      title: 'Smart Document Parsing',
-      description: 'Upload your transcripts and CVs — our AI extracts and organizes your information automatically.',
-      color: 'from-blue-500 to-cyan-600',
-      bgLight: 'bg-blue-50',
-    },
-  ];
-
-  const aiTools = [
-    {
-      icon: FileEdit,
-      title: 'AI SOP Generator',
-      description: 'Create tailored Statements of Purpose in minutes. AI-powered writing with university-specific customization.',
-      link: '/tools/sop-generator',
-      color: 'from-violet-500 to-purple-600',
-      features: ['Program-specific SOPs', 'PDF & Word export', 'Draft history', 'AI suggestions'],
-    },
-    {
-      icon: Briefcase,
-      title: 'AI CV Generator',
-      description: 'Build professional German-style CVs (Lebenslauf) with AI feedback and improvement suggestions.',
-      link: '/tools/cv-generator',
-      color: 'from-blue-500 to-cyan-600',
-      features: ['File upload support', 'AI feedback', 'Professional format', 'Instant download'],
-    },
-    {
-      icon: FileSearch,
-      title: 'Document Parser',
-      description: 'Upload transcripts and certificates — AI extracts your grades, courses, and qualifications automatically.',
-      link: '/profile',
-      color: 'from-emerald-500 to-teal-600',
-      features: ['OCR technology', 'Auto-fill profile', 'Multiple formats', 'Secure storage'],
-    },
-  ];
-
-  const planningTools = [
-    {
-      icon: Calculator,
-      title: 'German Grade Calculator',
-      description: 'Convert your local grades to German scale using the Modified Bavarian Formula.',
-      link: '/german-grade-calculator',
-      iconColor: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      borderHover: 'hover:border-orange-200',
-    },
-    {
-      icon: Coins,
-      title: 'Cost of Living Calculator',
-      description: 'Compare living costs across 10+ German cities with detailed expense breakdowns.',
-      link: '/costofliving',
-      iconColor: 'text-green-600',
-      bgColor: 'bg-green-50',
-      borderHover: 'hover:border-green-200',
-    },
-    {
-      icon: Plane,
-      title: 'Visa Guide',
-      description: 'Step-by-step visa application guidance with interview preparation and document checklists.',
-      link: '/visa-guide',
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      borderHover: 'hover:border-blue-200',
-    },
-    {
-      icon: ClipboardList,
-      title: 'Application Tracker',
-      description: 'Kanban-style board to manage applications, deadlines, and document requirements.',
-      link: '/applications',
-      iconColor: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      borderHover: 'hover:border-purple-200',
-    },
-  ];
-
-  const featureShowcase = [
-    {
-      title: 'AI Program Matching',
-      description: 'Our AI analyzes your academic profile, skills, and career goals to find programs with the highest compatibility. Get match scores with detailed reasoning.',
-      image: '/features/ai-matching.webp',
-      link: '/recommendations',
-      badge: 'AI-Powered',
-      badgeColor: 'bg-violet-100 text-violet-700',
-    },
-    {
-      title: 'Application Tracker',
-      description: 'Manage all your applications with our Kanban-style board. Track deadlines, required documents, and application status in one place.',
-      image: '/features/application-tracker.webp',
-      link: '/applications',
-      badge: 'Free Tool',
-      badgeColor: 'bg-green-100 text-green-700',
-    },
-    {
-      title: 'AI SOP Generator',
-      description: 'Create tailored Statements of Purpose in minutes. Our AI adapts to each university and program, with PDF and Word export.',
-      image: '/features/sop-generator.webp',
-      link: '/tools/sop-generator',
-      badge: 'Most Popular',
-      badgeColor: 'bg-amber-100 text-amber-700',
-    },
-    {
-      title: 'Scholarship Finder',
-      description: 'German scholarships matched to your profile. See eligibility percentages and apply directly.',
-      image: '/features/scholarship-finder.webp',
-      link: '/scholarships',
-      badge: 'Scholarships Included',
-      badgeColor: 'bg-blue-100 text-blue-700',
-    },
-  ];
-
-  const faqItems = [
-    {
-      question: 'How can I study in Germany for free?',
-      answer: 'Most public universities in Germany charge no tuition fees for international students. You only pay a semester contribution (€150-350) which includes public transport tickets. Our platform helps you find tuition-free programs and matching scholarships.',
-    },
-    {
-      question: 'What is the German blocked account requirement?',
-      answer: 'A blocked account (Sperrkonto) is required for student visas, proving you have €11,904 for one year (€992/month). You can open one through providers like Expatrio or Fintiba. This amount is released monthly after you arrive in Germany.',
-    },
-    {
-      question: 'How do I convert my GPA to German grades?',
-      answer: 'Germany uses the Modified Bavarian Formula to convert foreign grades. Our German Grade Calculator automatically converts your GPA from any grading scale (4.0, 10.0, percentage) to the German 1.0-5.0 scale used by universities.',
-    },
-
-    {
-      question: 'How to write a Statement of Purpose for German universities?',
-      answer: 'A strong SOP should cover your academic background, motivation for the program, relevant experience, and career goals. Our AI SOP Generator creates personalized SOPs based on your profile and target university requirements.',
-    },
-    {
-      question: 'What is the cost of living in Germany for students?',
-      answer: 'Monthly costs vary by city: Munich €1,200-1,500, Berlin €900-1,100, smaller cities €700-900. Our Cost of Living Calculator provides detailed breakdowns for rent, food, transport, and insurance across 10+ German cities.',
-    },
-    {
-      question: 'What is UniAdvisorAI and how does it help students?',
-      answer: 'UniAdvisorAI is a free AI-powered platform that provides personalized university and scholarship recommendations and helps students track their applications.',
-    },
-    {
-      question: 'Is UniAdvisorAI free to use for students?',
-      answer: 'Yes, UniAdvisorAI offers its AI University advisor and scholarship tracking services completely free for students.',
-    },
-    {
-      question: 'How does the AI bot advisor recommend scholarships?',
-      answer: 'The AI bot analyzes student profiles and preferences to suggest relevant scholarships and college opportunities tailored to each student.',
-    },
-    {
-      question: 'Does UniAdvisorAI support students from all locations?',
-      answer: 'Yes, UniAdvisorAI is location-independent and provides AI recommendations and tracking services to students regardless of their location.',
-    },
-  ];
-
-  const steps = [
-    { step: 1, title: 'Create Profile', description: 'Tell us about your academic background and goals', icon: GraduationCap },
-    { step: 2, title: 'Get Recommendations', description: 'Our AI matches you with ideal programs', icon: Sparkles },
-    { step: 3, title: 'Track Applications', description: 'Manage your applications in one place', icon: ClipboardList },
-  ];
-
-  const resources = [
-    { title: 'Academic Programs', description: 'Search through thousands of Bachelor and Master degrees.', link: '/programs', icon: BookOpen, color: 'bg-blue-50 text-blue-600', borderColor: 'hover:border-blue-200' },
-    { title: 'Universities', description: 'Detailed profiles of top German universities and rankings.', link: '/universities', icon: Building2, color: 'bg-purple-50 text-purple-600', borderColor: 'hover:border-purple-200' },
-    { title: 'Scholarships', description: 'Find funding opportunities and financial aid.', link: '/scholarships', icon: Award, color: 'bg-amber-50 text-amber-600', borderColor: 'hover:border-amber-200' },
-    { title: 'Survival Guides', description: 'Step-by-step survival guides for students from India, Pakistan, and more.', link: '/tools/survival-guides', icon: Globe, color: 'bg-teal-50 text-teal-600', borderColor: 'hover:border-teal-200' },
-    { title: 'Student Community', description: 'Connect with peers, ask questions, and share experiences.', link: '/community', icon: Users, color: 'bg-green-50 text-green-600', borderColor: 'hover:border-green-200' },
-    { title: 'Student Tools', description: 'Visa guides, grade calculator, cost of living, and more.', link: '/german-grade-calculator', icon: Calculator, color: 'bg-rose-50 text-rose-600', borderColor: 'hover:border-rose-200' },
-  ];
-
-  // ─── Testimonials (E-E-A-T) ────────────────────────────────────
-  // Add REAL student testimonials here — the section below renders automatically
-  // once this array is non-empty. Do NOT add fabricated reviews: Google penalizes
-  // fake review content and it erodes trust. Format example is commented out.
-  const testimonials: { quote: string; name: string; detail: string }[] = [
-    // { quote: 'UniAdvisorAI matched me to three tuition-free Masters in a weekend.', name: 'A. Khan', detail: 'MSc Computer Science · applied from Pakistan' },
-  ];
-
-  // ─── SEO Schemas ───────────────────────────────────────────────
-
-  const websiteSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'UniAdvisorAI',
-    url: 'https://www.uniadvisorai.com',
-    description: 'AI-powered platform to find German university programs, scholarships, and manage study abroad applications',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: 'https://www.uniadvisorai.com/programs?search={search_term_string}',
-      'query-input': 'required name=search_term_string',
-    },
-  };
-
-  const organizationSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'UniAdvisorAI',
-    url: 'https://www.uniadvisorai.com',
-    logo: 'https://www.uniadvisorai.com/logo.png',
-    description: 'AI-powered study-abroad platform helping international students find German university programs, scholarships, and application tools — for free.',
-    // TODO: add your REAL social profile URLs (LinkedIn, Instagram, X, YouTube).
-    // Filling sameAs strengthens your brand entity and how AI answer engines cite you.
-    sameAs: [
-      // 'https://www.linkedin.com/company/uniadvisorai',
-      // 'https://www.instagram.com/uniadvisorai',
-      // 'https://twitter.com/uniadvisorai',
-    ],
-    contactPoint: {
-      '@type': 'ContactPoint',
-      contactType: 'customer support',
-      availableLanguage: ['English', 'German'],
-    },
-  };
-
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqItems.map((item) => ({
-      '@type': 'Question',
-      name: item.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: item.answer,
-      },
-    })),
-  };
-
-  const webAppSchema = {
+  const schema = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
-    name: 'UniAdvisorAI',
-    url: 'https://www.uniadvisorai.com',
+    name: 'CampusConsult',
     applicationCategory: 'EducationalApplication',
-    operatingSystem: 'Any',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-    },
+    description:
+      'Free AI advisor for studying in Germany: program matching, application tracking, SOP and CV generation, scholarships, cost of living and visa guidance.',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
   };
 
-  const howToSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'HowTo',
-    name: 'How to find and apply to German university programs with UniAdvisorAI',
-    description: 'Create your profile, get AI-matched program recommendations, and track your applications — all in one free platform.',
-    step: steps.map((s, i) => ({
-      '@type': 'HowToStep',
-      position: i + 1,
-      name: s.title,
-      text: s.description,
-    })),
-  };
-
-  const combinedSchema = {
-    '@context': 'https://schema.org',
-    '@graph': [websiteSchema, organizationSchema, faqSchema, webAppSchema, howToSchema],
-  };
-
-  const navLinks = [
-    { name: 'Programs', path: '/programs' },
-    { name: 'Universities', path: '/universities' },
-    { name: 'Scholarships', path: '/scholarships' },
-    { name: 'Community', path: '/community' },
-  ];
-
-  const toolsLinks = [
-    { name: 'Country Guides', path: '/tools/survival-guides', icon: Globe },
-    { name: 'Grade Calculator', path: '/german-grade-calculator', icon: Calculator },
-    { name: 'Cost of Living', path: '/costofliving', icon: Coins },
-    { name: 'Visa Guide', path: '/visa-guide', icon: CreditCard },
-    { name: 'SOP Generator', path: '/tools/sop-generator', icon: FileEdit },
-    { name: 'CV Generator', path: '/tools/cv-generator', icon: Briefcase },
-  ];
-
-  // ═══════════════════════════════════════════════════════════════
-  // RENDER
-  // ═══════════════════════════════════════════════════════════════
+  const themeLabel = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
 
   return (
-    <div className="overflow-hidden bg-white">
+    <div className="min-h-screen bg-white dark:bg-surface-950">
       <SEO
-        title="Study in Germany 2026 — AI Program Finder & Free Tools | UniAdvisorAI"
-        description="Discover 10,000+ Bachelor's & Master's programs at tuition-free German universities. AI-powered SOP Generator, Scholarship Matcher, Grade Calculator & Visa Guide — 100% free for international students."
+        title="CampusConsult — Free AI Advisor for Studying in Germany"
+        description="Match with German university programs, generate your SOP and CV, find scholarships and track every application deadline. Completely free for international students."
         keywords={[
-          'study in germany', 'german universities', 'scholarships germany', 'masters in germany',
-          'free education germany', 'uni assist', 'sop generator', 'german grade calculator',
-          'cost of living germany', 'student visa germany', 'blocked account', 'tum', 'rwth aachen',
-          'study abroad', 'international students', 'study in germany from india', 'aps india',
-          'mea apostille', 'vfs global germany', 'study in germany from pakistan', 'hec verification germany',
+          'study in germany',
+          'german universities',
+          'free study abroad advisor',
+          'scholarships germany',
+          'masters in germany',
+          'sop generator',
+          'student visa germany',
         ]}
-        schema={combinedSchema}
+        schema={schema}
       />
 
-      {/* ─── Header / Navigation ──────────────────────────────────── */}
+      {/* ─── Nav ──────────────────────────────────────────────── */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-          ? 'bg-white/90 backdrop-blur-xl shadow-sm shadow-surface-900/5 border-b border-surface-100'
-          : 'bg-transparent'
-          }`}
+        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? 'bg-white/85 dark:bg-surface-950/85 backdrop-blur-xl border-b border-surface-200/70 dark:border-surface-800'
+            : 'bg-transparent'
+        }`}
       >
-        <div className="page-container flex items-center justify-between py-4">
-          {/* Logo */}
-          <div
-            className="flex items-center gap-2.5 cursor-pointer group"
-            onClick={() => navigate('/')}
-            role="link"
-            tabIndex={0}
-            aria-label="UniAdvisorAI Home"
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/25 group-hover:shadow-primary-500/40 transition-shadow">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-surface-900 tracking-tight">UniAdvisorAI</span>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-4">
+          <Logo to="/" idSuffix="nav" markClassName="w-10 h-10 rounded-xl" wordmarkClassName="text-xl" />
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
-            {navLinks.map((link) => (
+          <nav className="hidden md:flex items-center gap-1" aria-label="Main">
+            {navLinks.map((l) => (
               <Link
-                key={link.name}
-                to={link.path}
-                className="px-4 py-2 text-sm font-medium text-surface-600 hover:text-primary-600 rounded-lg hover:bg-primary-50/60 transition-all"
-                onClick={() => window.scrollTo(0, 0)}
+                key={l.path}
+                to={l.path}
+                className="px-3.5 py-2 text-sm font-medium text-surface-600 dark:text-surface-300 hover:text-primary-600 dark:hover:text-primary-400 rounded-lg hover:bg-primary-50/70 dark:hover:bg-primary-900/20 transition-all"
               >
-                {link.name}
+                {l.name}
               </Link>
             ))}
-            {/* Tools Dropdown */}
+
             <div className="relative group">
-              <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-surface-600 group-hover:text-primary-600 rounded-lg group-hover:bg-primary-50/60 transition-all">
-                Tools
-                <ChevronDown className="w-3.5 h-3.5 transition-transform group-hover:rotate-180" />
+              <button className="flex items-center gap-1 px-3.5 py-2 text-sm font-medium text-surface-600 dark:text-surface-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 rounded-lg group-hover:bg-primary-50/70 dark:group-hover:bg-primary-900/20 transition-all">
+                Free tools
               </button>
-              <div className="absolute top-full right-0 pt-2 w-60 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
-                <div className="bg-white rounded-2xl shadow-2xl shadow-surface-900/10 border border-surface-100 p-2 overflow-hidden">
-                  {toolsLinks.map((tool) => (
+              <div className="absolute top-full right-0 pt-2 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0">
+                <div className="bg-white dark:bg-surface-900 rounded-2xl shadow-2xl shadow-surface-900/10 border border-surface-100 dark:border-surface-800 p-2">
+                  {toolLinks.map((t) => (
                     <Link
-                      key={tool.name}
-                      to={tool.path}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-surface-50 transition-colors group/item"
-                      onClick={() => window.scrollTo(0, 0)}
+                      key={t.path}
+                      to={t.path}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors group/item"
                     >
-                      <div className="w-9 h-9 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center group-hover/item:bg-primary-600 group-hover/item:text-white transition-all">
-                        <tool.icon className="w-4 h-4" />
-                      </div>
-                      <span className="text-sm font-medium text-surface-700 group-hover/item:text-surface-900">
-                        {tool.name}
+                      <span className="w-9 h-9 rounded-lg bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300 flex items-center justify-center group-hover/item:bg-primary-600 group-hover/item:text-white transition-all">
+                        <t.icon className="w-4 h-4" />
                       </span>
+                      <span className="text-sm font-medium text-surface-700 dark:text-surface-200">{t.name}</span>
                     </Link>
                   ))}
                 </div>
@@ -560,651 +332,537 @@ export default function LandingPage() {
             </div>
           </nav>
 
-          {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" onClick={() => navigate('/login')}>
-              Login
-            </Button>
-            <Button onClick={() => navigate('/register')}>
-              Get Started
+          <div className="hidden md:flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              aria-label={themeLabel}
+              title={themeLabel}
+              className="p-2.5 rounded-xl text-surface-600 dark:text-surface-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <Link
+              to="/login"
+              className="px-4 py-2 text-sm font-semibold text-surface-700 dark:text-surface-200 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+            >
+              Sign in
+            </Link>
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl shadow-lg shadow-primary-600/20 hover:shadow-primary-600/30 transition-all active:scale-[0.98]"
+            >
+              Start free
               <ArrowRight className="w-4 h-4" />
-            </Button>
+            </Link>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden p-2.5 text-surface-600 hover:bg-surface-100 rounded-xl transition-colors"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle mobile menu"
-            aria-expanded={isMobileMenuOpen}
-          >
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          <div className="flex md:hidden items-center gap-1">
+            <button
+              onClick={toggleTheme}
+              aria-label={themeLabel}
+              className="p-2 rounded-lg text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800"
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button
+              className="p-2 rounded-lg text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800"
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
 
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="md:hidden bg-white/95 backdrop-blur-xl border-b border-surface-100 overflow-hidden"
+        {mobileOpen && (
+          <div className="md:hidden bg-white dark:bg-surface-950 border-t border-surface-200 dark:border-surface-800 px-4 py-4 space-y-1">
+            {[...navLinks, ...toolLinks.map((t) => ({ name: t.name, path: t.path }))].map((l) => (
+              <Link
+                key={l.path}
+                to={l.path}
+                onClick={() => setMobileOpen(false)}
+                className="block px-3 py-2.5 rounded-lg text-sm font-medium text-surface-700 dark:text-surface-200 hover:bg-surface-50 dark:hover:bg-surface-800"
+              >
+                {l.name}
+              </Link>
+            ))}
+            <Link
+              to="/register"
+              onClick={() => setMobileOpen(false)}
+              className="block mt-3 px-3 py-3 rounded-xl text-center text-sm font-semibold text-white bg-primary-600"
             >
-              <div className="page-container py-6 flex flex-col gap-2">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    to={link.path}
-                    className="flex items-center justify-between py-3 px-4 text-surface-700 font-medium rounded-xl hover:bg-surface-50 transition-colors"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {link.name}
-                    <ChevronRight className="w-4 h-4 text-surface-300" />
-                  </Link>
-                ))}
-                <div className="py-3 px-4">
-                  <div className="text-xs font-semibold text-surface-400 mb-3 uppercase tracking-wider">
-                    Tools
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {toolsLinks.map((tool) => (
-                      <Link
-                        key={tool.name}
-                        to={tool.path}
-                        className="flex flex-col items-center justify-center p-4 rounded-xl bg-surface-50 hover:bg-primary-50 text-center gap-2 transition-colors"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <tool.icon className="w-5 h-5 text-primary-600" />
-                        <span className="text-xs font-medium text-surface-700">{tool.name}</span>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 pt-4 mt-2 border-t border-surface-100">
-                  <Button variant="ghost" onClick={() => navigate('/login')} className="w-full justify-center">
-                    Login
-                  </Button>
-                  <Button onClick={() => navigate('/register')} className="w-full justify-center">
-                    Get Started
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              Start free
+            </Link>
+          </div>
+        )}
       </header>
 
-      {/* ─── Hero Section ─────────────────────────────────────────── */}
-      <section ref={heroRef} className="relative flex items-center pt-28 lg:pt-32 pb-16 lg:pb-24 overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-primary-50/30 to-white" />
-        <div className="absolute inset-0 bg-[radial-gradient(58%_45%_at_50%_-5%,rgba(99,102,241,0.16),transparent_70%)]" />
-        <div className="absolute -top-28 right-[-12%] w-[620px] h-[620px] bg-gradient-to-br from-primary-300/30 to-violet-300/10 rounded-full blur-3xl floating" />
-        <div className="absolute bottom-[-18%] left-[-10%] w-[520px] h-[520px] bg-gradient-to-tr from-blue-300/20 to-cyan-200/10 rounded-full blur-3xl floating-delayed" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:54px_54px] [mask-image:radial-gradient(70%_55%_at_50%_25%,#000,transparent)]" />
+      {/* ─── Hero ─────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden pt-32 pb-16 sm:pt-40 sm:pb-20">
+        <div aria-hidden className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary-50/70 via-white to-white dark:from-primary-950/40 dark:via-surface-950 dark:to-surface-950" />
+          <div className="absolute -top-24 -right-24 w-[38rem] h-[38rem] rounded-full bg-primary-200/40 dark:bg-primary-800/20 blur-3xl" />
+          <div className="absolute top-40 -left-32 w-[30rem] h-[30rem] rounded-full bg-accent-200/30 dark:bg-accent-900/10 blur-3xl" />
+        </div>
 
-        <div className="page-container relative z-10">
-          <div className="grid lg:grid-cols-[1.04fr_0.96fr] gap-12 lg:gap-14 items-center">
-            {/* Left: Copy */}
-            <motion.div
-              initial={{ opacity: 0, y: 28 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            >
-              {/* Eyebrow */}
-              <div className="inline-flex items-center gap-2 pl-1.5 pr-4 py-1.5 rounded-full bg-white/70 backdrop-blur border border-surface-200/70 shadow-sm text-sm font-semibold text-surface-700 mb-7">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-600 text-white text-xs">
-                  <Sparkles className="w-3.5 h-3.5" /> AI
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-12 gap-12 lg:gap-10 items-center">
+            <div className="lg:col-span-6">
+              <Reveal>
+                <span className="inline-flex items-center gap-2 rounded-full border border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/30 px-3.5 py-1.5 text-xs font-semibold text-primary-700 dark:text-primary-300">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-primary-500 opacity-75 animate-ping" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-600" />
+                  </span>
+                  100% free — forever, for every student
                 </span>
-                Built for international students
-              </div>
+              </Reveal>
 
-              {/* Headline */}
-              <h1 className="text-[2.6rem] leading-[1.05] sm:text-5xl lg:text-[4rem] lg:leading-[1.03] font-extrabold text-surface-900 tracking-[-0.02em] mb-6">
-                Get into a top German university —{' '}
-                <span className="gradient-text">for free.</span>
-              </h1>
+              <Reveal delay={0.06}>
+                <h1 className="mt-6 text-[2.6rem] leading-[1.05] sm:text-5xl lg:text-[3.5rem] lg:leading-[1.04] font-extrabold tracking-[-0.025em] text-surface-900 dark:text-white">
+                  Study in Germany
+                  <br />
+                  <span className="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
+                    without paying an agent
+                  </span>
+                </h1>
+              </Reveal>
 
-              {/* Subcopy */}
-              <p className="text-lg lg:text-xl text-surface-500 leading-relaxed max-w-xl mb-8">
-                Everything you need to study in Germany: AI-matched{' '}
-                <span className="text-surface-800 font-semibold">tuition-free programs</span>, scholarships you actually qualify for, and an SOP drafted in minutes — not months.
-              </p>
+              <Reveal delay={0.12}>
+                <p className="mt-6 text-lg leading-relaxed text-surface-600 dark:text-surface-300 max-w-xl">
+                  CampusConsult is an AI advisor that finds the German programs you qualify for,
+                  writes your SOP and CV, matches you to scholarships and tracks every deadline
+                  through to your visa appointment.
+                </p>
+              </Reveal>
 
-              {/* CTAs */}
-              <div className="flex flex-col sm:flex-row gap-3.5">
-                <Button size="lg" onClick={() => navigate('/register')} className="group shadow-lg shadow-primary-600/20">
-                  Get started free
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
-                </Button>
-                <Button variant="outline" size="lg" onClick={() => navigate('/programs')}>
-                  Browse programs
-                </Button>
-              </div>
+              <Reveal delay={0.18}>
+                <div className="mt-9 flex flex-col sm:flex-row gap-3">
+                  <Link
+                    to="/register"
+                    className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-base font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl shadow-xl shadow-primary-600/25 hover:shadow-primary-600/35 transition-all active:scale-[0.98]"
+                  >
+                    Get my program matches
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    to="/programs"
+                    className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-base font-semibold text-surface-800 dark:text-surface-100 bg-white dark:bg-surface-900 border-2 border-surface-200 dark:border-surface-700 hover:border-primary-300 dark:hover:border-primary-700 rounded-xl transition-all active:scale-[0.98]"
+                  >
+                    Browse programs
+                  </Link>
+                </div>
+              </Reveal>
 
-              {/* Microcopy */}
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-5 text-sm text-surface-500">
-                <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-emerald-500" /> Free forever</span>
-                <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-emerald-500" /> No credit card</span>
-                <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-emerald-500" /> 2-minute setup</span>
-              </div>
+              <Reveal delay={0.24}>
+                <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2.5">
+                  {['No credit card', 'No premium tier', 'No agent fees'].map((t) => (
+                    <li key={t} className="flex items-center gap-2 text-sm text-surface-600 dark:text-surface-400">
+                      <Check className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
+            </div>
 
-              {/* Trust stats */}
-              <div className="flex items-center gap-8 sm:gap-12 mt-10 pt-8 border-t border-surface-200/70">
-                {[
-                  { value: stats?.total_programs, fallback: '10,000+', label: 'Programs' },
-                  { value: stats?.unique_universities, fallback: '400+', label: 'Universities' },
-                  { value: stats?.unique_cities, fallback: '90+', label: 'Cities' },
-                ].map(({ value, label, fallback }) => (
-                  <div key={label}>
-                    <div className="text-2xl sm:text-3xl font-extrabold text-surface-900 tabular-nums tracking-tight">
-                      {value?.toLocaleString() || fallback}
-                    </div>
-                    <div className="text-sm text-surface-400 mt-0.5">{label}</div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Right: Product visual */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.94, y: 24 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.85, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="relative"
-            >
-              <div className="absolute -inset-6 bg-gradient-to-tr from-primary-500/20 via-violet-500/10 to-transparent rounded-[2.5rem] blur-2xl" />
-              <div className="relative rounded-[1.75rem] bg-white/80 backdrop-blur-sm p-2.5 ring-1 ring-surface-900/5 shadow-2xl shadow-primary-900/15">
-                <div className="overflow-hidden rounded-[1.4rem] relative ring-1 ring-surface-900/5">
-                  <img
-                    src="/hero-image.webp"
-                    alt="UniAdvisorAI — AI study-abroad advisor for German universities"
-                    className="w-full h-auto object-cover"
-                    width="800"
-                    height="450"
-                    fetchPriority="high"
+            {/* Hero image */}
+            <Reveal delay={0.16} className="lg:col-span-6">
+              <div className="relative">
+                <div className="relative rounded-3xl overflow-hidden ring-1 ring-surface-200 dark:ring-surface-800 shadow-2xl shadow-primary-900/10 dark:shadow-black/50">
+                  <picture>
+                    <source srcSet="/hero-image.webp" type="image/webp" />
+                    <img
+                      src="/hero-image.png"
+                      alt="Student celebrating a German university admission"
+                      width={1024}
+                      height={559}
+                      className="block w-full h-auto"
+                    />
+                  </picture>
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 bg-gradient-to-t from-surface-950/35 via-transparent to-transparent"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary-900/10 to-transparent pointer-events-none" />
                 </div>
-              </div>
 
-              {/* Floating: Match score */}
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                className="hidden lg:block absolute -top-5 -left-5 z-20 floating"
-              >
-                <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl shadow-surface-900/10 p-4 border border-surface-100 min-w-[180px]">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-medium text-surface-400">Profile match</p>
-                    <span className="text-xs font-bold text-emerald-600">94%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-surface-100 overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: '94%' }} transition={{ duration: 1, delay: 1 }} className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600" />
-                  </div>
-                  <p className="text-xs text-surface-500 mt-2">TUM · M.Sc. Data Science</p>
-                </div>
-              </motion.div>
-
-              {/* Floating: Scholarship */}
-              <motion.div
-                initial={{ opacity: 0, y: -12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.9 }}
-                className="hidden lg:block absolute -bottom-6 -right-4 z-20 floating-delayed"
-              >
-                <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl shadow-surface-900/10 p-4 border border-surface-100 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-                    <Award className="w-5 h-5 text-amber-600" />
-                  </div>
+                {/* floating chip */}
+                <div className="absolute -bottom-5 left-5 sm:left-8 flex items-center gap-3 rounded-2xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 shadow-xl px-4 py-3">
+                  <span className="text-2xl leading-none">🇩🇪</span>
                   <div>
-                    <p className="text-xs text-surface-400 font-medium">Scholarship found</p>
-                    <p className="font-bold text-surface-900 text-sm">DAAD · €992/mo</p>
+                    <p className="text-sm font-semibold text-surface-900 dark:text-white">Germany — live now</p>
+                    <p className="text-xs text-surface-500 dark:text-surface-400">More destinations coming soon</p>
                   </div>
                 </div>
-              </motion.div>
-
-              {/* Floating: Visa chip */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 1.1 }}
-                className="hidden lg:flex absolute top-1/2 -right-6 z-20 floating"
-              >
-                <div className="bg-surface-900 text-white rounded-full shadow-xl px-4 py-2 flex items-center gap-2 text-sm font-semibold">
-                  <Plane className="w-4 h-4 text-primary-300" /> Visa-ready
-                </div>
-              </motion.div>
-            </motion.div>
-          </div>
-
-          {/* Trusted by countries */}
-          <div className="mt-16 lg:mt-20">
-            <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-surface-400 mb-5">
-              Built for students applying from
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-semibold text-surface-500">
-              {['India', 'Pakistan', 'Nigeria', 'Bangladesh', 'Egypt', 'Indonesia', 'Turkey'].map((c) => (
-                <span key={c} className="inline-flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-surface-300" /> {c}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Trust Strip ──────────────────────────────────────────── */}
-      <section className="border-y border-surface-100 bg-white">
-        <div className="page-container py-6">
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm font-medium text-surface-500">
-            {['100% Free to use', 'No credit card required', 'Tuition-free German universities', 'AI-personalized to your profile'].map((t) => (
-              <div key={t} className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-emerald-500 shrink-0" /> {t}
               </div>
-            ))}
+            </Reveal>
           </div>
-        </div>
-      </section>
 
-      {/* ─── Features Section ─────────────────────────────────────── */}
-      <section className="py-24 bg-white relative">
-        <div className="page-container">
-          <RevealSection>
-            <SectionHeader
-              title="Everything You Need to"
-              highlight="Study in Germany"
-              description="Our platform combines AI technology with comprehensive university data to help you find and apply to your ideal program."
-            />
-          </RevealSection>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {features.map((feature, index) => (
-              <RevealSection key={feature.title} delay={index * 0.1}>
-                <div className="group relative h-full bg-white rounded-2xl p-7 border border-surface-100 hover:border-surface-200 hover:shadow-xl hover:shadow-surface-900/5 transition-all duration-500">
-                  {/* Hover gradient overlay */}
-                  <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500`} />
-
-                  <div className={`relative w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300`}>
-                    <feature.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="relative font-bold text-surface-900 mb-2.5 text-[1.05rem]">{feature.title}</h3>
-                  <p className="relative text-sm text-surface-500 leading-relaxed">{feature.description}</p>
-                </div>
-              </RevealSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── How It Works Section ─────────────────────────────────── */}
-      <section className="py-24 bg-surface-50 relative overflow-hidden">
-        {/* Decorative background */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(99,102,241,0.06),transparent)]" />
-
-        <div className="page-container relative">
-          <RevealSection>
-            <SectionHeader
-              title="How It Works"
-              description="Get started in three simple steps"
-            />
-          </RevealSection>
-
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-8 relative">
-            {/* Connecting line (desktop) */}
-            <div className="hidden md:block absolute top-[4.5rem] left-[20%] right-[20%] h-[2px]">
-              <div className="w-full h-full bg-gradient-to-r from-primary-200 via-primary-300 to-primary-200 rounded-full" />
-            </div>
-
-            {steps.map((step, index) => (
-              <RevealSection key={step.step} delay={index * 0.15}>
-                <div className="relative bg-white rounded-2xl p-8 border border-surface-100 hover:shadow-xl hover:shadow-surface-900/5 transition-all duration-500 text-center group">
-                  <div className="relative mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center mb-6 shadow-xl shadow-primary-500/20 group-hover:shadow-primary-500/30 group-hover:scale-105 transition-all duration-300">
-                    <step.icon className="w-8 h-8 text-white" />
-                    {/* Step number badge */}
-                    <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white shadow-md flex items-center justify-center">
-                      <span className="text-xs font-bold text-primary-600">{step.step}</span>
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-bold text-surface-900 mb-2">{step.title}</h3>
-                  <p className="text-surface-500 leading-relaxed">{step.description}</p>
-                </div>
-              </RevealSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Feature Showcase with Images ─────────────────────────── */}
-      <section className="py-28 bg-gradient-to-b from-white via-white to-surface-50">
-        <div className="page-container">
-          <RevealSection>
-            <SectionHeader
-              badge="Platform Features"
-              badgeIcon={Sparkles}
-              title="See What You Can"
-              highlight="Achieve"
-              description="Explore our powerful features designed to make your study abroad journey seamless."
-            />
-          </RevealSection>
-
-          <div className="space-y-28 lg:space-y-32">
-            {featureShowcase.map((feature, index) => {
-              const isReversed = index % 2 === 1;
-              return (
-                <RevealSection key={feature.title}>
-                  <div className={`grid lg:grid-cols-2 gap-12 lg:gap-16 items-center`}>
-                    {/* Text */}
-                    <div className={isReversed ? 'lg:order-2' : ''}>
-                      <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-5 ${feature.badgeColor}`}>
-                        {feature.badge}
-                      </span>
-                      <h3 className="text-2xl md:text-3xl lg:text-[2rem] font-extrabold text-surface-900 mb-5 leading-tight">
-                        {feature.title}
-                      </h3>
-                      <p className="text-lg text-surface-500 mb-8 leading-relaxed">
-                        {feature.description}
-                      </p>
-                      <Link
-                        to={feature.link}
-                        onClick={() => window.scrollTo(0, 0)}
-                        className="inline-flex items-center gap-2.5 px-7 py-3.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30 hover:-translate-y-0.5 group"
-                      >
-                        Try Now
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                      </Link>
-                    </div>
-
-                    {/* Image */}
-                    <div className={isReversed ? 'lg:order-1' : ''}>
-                      <motion.div
-                        whileHover={{ scale: 1.015 }}
-                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                        className="relative rounded-2xl overflow-hidden shadow-2xl shadow-surface-900/8 border border-surface-200/80 group"
-                      >
-                        <img
-                          src={feature.image}
-                          alt={feature.title}
-                          className="w-full h-auto"
-                          loading="lazy"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-surface-900/5 to-transparent pointer-events-none" />
-                        {/* Subtle overlay on hover */}
-                        <div className="absolute inset-0 bg-primary-600/0 group-hover:bg-primary-600/[0.02] transition-colors duration-500 pointer-events-none" />
-                      </motion.div>
-                    </div>
-                  </div>
-                </RevealSection>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Explore Resources ────────────────────────────────────── */}
-      <section className="py-24 bg-white">
-        <div className="page-container">
-          <RevealSection>
-            <SectionHeader
-              title="Explore Our"
-              highlight="Resources"
-              description="Everything you need to plan your studies in Germany, all in one place."
-            />
-          </RevealSection>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {resources.map((resource, index) => (
-              <RevealSection key={resource.title} delay={index * 0.08}>
-                <Link
-                  to={resource.link}
-                  onClick={() => window.scrollTo(0, 0)}
-                  className={`block h-full bg-white rounded-2xl p-8 border border-surface-100 ${resource.borderColor} hover:shadow-xl hover:shadow-surface-900/5 transition-all duration-500 group`}
-                >
-                  <div className={`w-14 h-14 rounded-2xl ${resource.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                    <resource.icon className="w-7 h-7" />
-                  </div>
-                  <h3 className="text-xl font-bold text-surface-900 mb-3 group-hover:text-primary-600 transition-colors">
-                    {resource.title}
-                  </h3>
-                  <p className="text-surface-500 leading-relaxed mb-6">
-                    {resource.description}
-                  </p>
-                  <div className="flex items-center gap-2 text-primary-600 font-semibold text-sm opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-                    Explore
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </Link>
-              </RevealSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Stats Section ────────────────────────────────────────── */}
-      {stats && (
-        <section className="py-20 relative overflow-hidden">
-          {/* Gradient background with texture */}
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.1),transparent)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.05),transparent)]" />
-
-          <div className="page-container relative z-10">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          {/* Stat strip */}
+          <Reveal delay={0.3}>
+            <dl className="mt-20 grid grid-cols-2 sm:grid-cols-4 gap-px overflow-hidden rounded-2xl border border-surface-200 dark:border-surface-800 bg-surface-200 dark:bg-surface-800">
               {[
-                { value: stats.total_programs, label: 'Programs', icon: BookOpen },
-                { value: stats.unique_universities, label: 'Universities', icon: Building2 },
-                { value: stats.unique_cities, label: 'Cities', icon: MapPin },
-                { value: stats.by_degree_type?.Masters || 0, label: 'Masters Programs', icon: GraduationCap },
-              ].map((stat, index) => (
-                <RevealSection key={stat.label} delay={index * 0.1}>
-                  <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-4">
-                      <stat.icon className="w-6 h-6 text-white/80" />
-                    </div>
-                    <div className="text-4xl md:text-5xl font-extrabold text-white mb-2 tabular-nums">
-                      <AnimatedCounter value={stat.value} />
-                    </div>
-                    <div className="text-primary-200 font-medium">{stat.label}</div>
-                  </div>
-                </RevealSection>
+                { v: stats?.total_programs ?? 0, label: 'Programs indexed' },
+                { v: stats?.unique_universities ?? 0, label: 'Universities' },
+                { v: stats?.unique_cities ?? 0, label: 'Cities covered' },
+                { v: null, label: 'Cost to you' },
+              ].map((s) => (
+                <div key={s.label} className="bg-white dark:bg-surface-950 px-6 py-7 text-center">
+                  <dd className="text-3xl font-extrabold text-surface-900 dark:text-white tabular-nums">
+                    {s.v === null ? <span className="text-primary-600 dark:text-primary-400">€0</span> : <Counter value={s.v} />}
+                  </dd>
+                  <dt className="mt-1.5 text-sm text-surface-500 dark:text-surface-400">{s.label}</dt>
+                </div>
               ))}
-            </div>
+            </dl>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ─── Free proposition ─────────────────────────────────── */}
+      <section className="py-20 sm:py-24 bg-surface-50 dark:bg-surface-900/40 border-y border-surface-200 dark:border-surface-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal className="max-w-2xl">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.02em] text-surface-900 dark:text-white">
+              A consultant charges €1,500+. This charges nothing.
+            </h2>
+            <p className="mt-4 text-lg text-surface-600 dark:text-surface-300">
+              Not a free trial. Not a limited plan with the useful parts locked. Every feature is
+              available to every student, at no cost, with no card on file.
+            </p>
+          </Reveal>
+
+          <div className="mt-12 grid sm:grid-cols-3 gap-5">
+            {[
+              { icon: BadgeCheck, title: 'No paywall', body: 'Every tool, every guide, every recommendation — open to everyone from day one.' },
+              { icon: ShieldCheck, title: 'Your data stays yours', body: 'Documents live in your private vault. Nothing is sold, nothing is shared with agencies.' },
+              { icon: Clock, title: 'Answers in minutes', body: 'What takes an agency two weeks of back-and-forth takes one profile and one search here.' },
+            ].map((c) => (
+              <Reveal key={c.title}>
+                <div className="h-full rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-6">
+                  <span className="inline-flex w-11 h-11 items-center justify-center rounded-xl bg-primary-600 text-white">
+                    <c.icon className="w-5 h-5" />
+                  </span>
+                  <h3 className="mt-4 text-base font-bold text-surface-900 dark:text-white">{c.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-surface-600 dark:text-surface-400">{c.body}</p>
+                </div>
+              </Reveal>
+            ))}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
-      {/* ─── CTA Section ──────────────────────────────────────────── */}
-      <section className="py-24 bg-white">
-        <div className="page-container">
-          <div className="relative bg-surface-900 rounded-[2rem] p-10 md:p-16 text-center overflow-hidden">
-            {/* Background effects */}
-            <div className="absolute top-0 right-0 w-80 h-80 bg-primary-500/20 rounded-full blur-[100px]" />
-            <div className="absolute bottom-0 left-0 w-60 h-60 bg-blue-500/15 rounded-full blur-[80px]" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent)]" />
+      {/* ─── Showcase ─────────────────────────────────────────── */}
+      <section className="py-20 sm:py-28">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal className="max-w-2xl">
+            <span className="text-sm font-semibold uppercase tracking-wider text-primary-600 dark:text-primary-400">
+              What you get
+            </span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-[-0.02em] text-surface-900 dark:text-white">
+              The whole application, in one place
+            </h2>
+            <p className="mt-4 text-lg text-surface-600 dark:text-surface-300">
+              From the first search to the day your visa is stamped.
+            </p>
+          </Reveal>
 
-            <div className="relative z-10">
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-5 leading-tight">
-                Ready to Find Your<br className="hidden sm:block" /> Dream Program?
+          <div className="mt-16 space-y-24 sm:space-y-28">
+            {showcase.map((s, i) => (
+              <Reveal key={s.title}>
+                <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+                  <div className={i % 2 === 1 ? 'lg:order-2' : ''}>
+                    <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary-600 dark:text-primary-400">
+                      <s.icon className="w-4 h-4" />
+                      {s.eyebrow}
+                    </span>
+                    <h3 className="mt-3 text-2xl sm:text-3xl font-bold tracking-[-0.02em] text-surface-900 dark:text-white">
+                      {s.title}
+                    </h3>
+                    <p className="mt-4 text-base leading-relaxed text-surface-600 dark:text-surface-300">{s.body}</p>
+                    <ul className="mt-6 space-y-2.5">
+                      {s.points.map((p) => (
+                        <li key={p} className="flex items-start gap-2.5 text-sm text-surface-700 dark:text-surface-300">
+                          <Check className="w-4 h-4 mt-0.5 shrink-0 text-primary-600 dark:text-primary-400" />
+                          {p}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link
+                      to={s.to}
+                      className="mt-7 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:gap-2.5 transition-all"
+                    >
+                      {s.cta}
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+
+                  <div className={i % 2 === 1 ? 'lg:order-1' : ''}>
+                    <Screenshot src={s.image} alt={s.title} />
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Cost of living ───────────────────────────────────── */}
+      <section className="py-20 sm:py-24 bg-surface-50 dark:bg-surface-900/40 border-y border-surface-200 dark:border-surface-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <Reveal>
+              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary-600 dark:text-primary-400">
+                <Coins className="w-4 h-4" />
+                Cost planning
+              </span>
+              <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-[-0.02em] text-surface-900 dark:text-white">
+                Know the number before you commit
               </h2>
-              <p className="text-lg text-surface-300 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Join thousands of students who found their perfect German university program with our platform.
+              <p className="mt-4 text-lg leading-relaxed text-surface-600 dark:text-surface-300">
+                Tuition may be free, but Munich is not Leipzig. Compare rent, insurance, semester
+                fees and the blocked-account requirement city by city — then plan a budget you can
+                actually defend at the visa appointment.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" onClick={() => navigate('/register')} className="group">
-                  Create Free Account
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="lg"
-                  className="text-white hover:bg-white/10 border border-white/10"
-                  onClick={() => navigate('/scholarships')}
+              <ul className="mt-6 space-y-2.5">
+                {['Rent and living costs per city', 'Blocked account maths', 'Semester fee breakdown'].map((p) => (
+                  <li key={p} className="flex items-start gap-2.5 text-sm text-surface-700 dark:text-surface-300">
+                    <Check className="w-4 h-4 mt-0.5 shrink-0 text-primary-600 dark:text-primary-400" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/cost-of-living"
+                className="mt-7 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:gap-2.5 transition-all"
+              >
+                Compare cities
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Reveal>
+
+            <Reveal delay={0.1}>
+              <div className="relative rounded-3xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-6 sm:p-8">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-surface-400 dark:text-surface-500">
+                  <MapPin className="w-3.5 h-3.5 text-primary-500" />
+                  Cost of living by state
+                </div>
+                <img
+                  src={costHeatmap}
+                  alt="Heatmap of cost of living across German federal states"
+                  loading="lazy"
+                  decoding="async"
+                  className="mt-4 block w-full max-w-md mx-auto h-auto"
+                />
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Extras ───────────────────────────────────────────── */}
+      <section className="py-20 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal className="max-w-2xl">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.02em] text-surface-900 dark:text-white">
+              And the parts nobody prepares you for
+            </h2>
+          </Reveal>
+
+          <div className="mt-12 grid md:grid-cols-3 gap-5">
+            {extras.map((e, i) => (
+              <Reveal key={e.title} delay={i * 0.05}>
+                <Link
+                  to={e.to}
+                  className="group block h-full rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-7 transition-all hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-xl hover:shadow-primary-600/5 hover:-translate-y-0.5"
                 >
-                  <Award className="w-5 h-5" />
-                  Find Scholarships
-                </Button>
+                  <span className="inline-flex w-12 h-12 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300 transition-colors group-hover:bg-primary-600 group-hover:text-white">
+                    <e.icon className="w-6 h-6" />
+                  </span>
+                  <h3 className="mt-5 text-lg font-bold text-surface-900 dark:text-white">{e.title}</h3>
+                  <p className="mt-2.5 text-sm leading-relaxed text-surface-600 dark:text-surface-400">{e.body}</p>
+                  <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 dark:text-primary-400 group-hover:gap-2.5 transition-all">
+                    Open
+                    <ArrowRight className="w-4 h-4" />
+                  </span>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── How it works ─────────────────────────────────────── */}
+      <section className="py-20 sm:py-24 bg-surface-50 dark:bg-surface-900/40 border-y border-surface-200 dark:border-surface-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal className="max-w-2xl">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.02em] text-surface-900 dark:text-white">
+              Three steps, start to offer
+            </h2>
+          </Reveal>
+
+          <div className="mt-14 grid md:grid-cols-3 gap-8">
+            {steps.map((s, i) => (
+              <Reveal key={s.n} delay={i * 0.08}>
+                <div>
+                  <span className="text-5xl font-extrabold text-primary-200 dark:text-primary-900 tabular-nums">
+                    {s.n}
+                  </span>
+                  <h3 className="mt-3 text-xl font-bold text-surface-900 dark:text-white">{s.title}</h3>
+                  <p className="mt-2.5 text-sm leading-relaxed text-surface-600 dark:text-surface-400 max-w-xs">
+                    {s.body}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Countries ────────────────────────────────────────── */}
+      <section className="py-20 sm:py-28">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal className="max-w-2xl">
+            <span className="text-sm font-semibold uppercase tracking-wider text-primary-600 dark:text-primary-400">
+              Destinations
+            </span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-[-0.02em] text-surface-900 dark:text-white">
+              Germany today. More countries next.
+            </h2>
+            <p className="mt-4 text-lg text-surface-600 dark:text-surface-300">
+              We went deep on one country first — the full application process, not a summary page.
+              These are the destinations we are building out now.
+            </p>
+          </Reveal>
+
+          <Reveal className="mt-12">
+            <div className="rounded-3xl border-2 border-primary-200 dark:border-primary-800 bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/30 dark:to-surface-900 p-8">
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="text-5xl leading-none">🇩🇪</span>
+                <div className="flex-1 min-w-[16rem]">
+                  <div className="flex items-center gap-2.5">
+                    <h3 className="text-2xl font-bold text-surface-900 dark:text-white">Germany</h3>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-600 px-2.5 py-1 text-xs font-semibold text-white">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                      Live
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-sm text-surface-600 dark:text-surface-300">
+                    Full coverage — programs, universities, scholarships, costs, visa and application process.
+                  </p>
+                </div>
+                <Link
+                  to="/programs"
+                  className="inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-colors"
+                >
+                  Explore Germany
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
+          </Reveal>
 
-      {/* ─── AI Tools Spotlight ───────────────────────────────────── */}
-      <section className="py-24 bg-gradient-to-b from-surface-50 to-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_100%,rgba(99,102,241,0.05),transparent)]" />
+          <Reveal className="mt-8">
+            <div className="flex items-center gap-3 mb-5">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400">
+                Coming soon
+              </h3>
+              <div className="h-px flex-1 bg-surface-200 dark:bg-surface-800" />
+            </div>
 
-        <div className="page-container relative">
-          <RevealSection>
-            <SectionHeader
-              badge="AI-Powered Tools"
-              badgeIcon={Zap}
-              badgeColor="bg-violet-100 text-violet-700"
-              title="Write Better,"
-              highlight="Apply Smarter"
-              description="Our AI tools help you create professional application documents in minutes, not hours."
-            />
-          </RevealSection>
-
-          <div className="grid lg:grid-cols-3 gap-6">
-            {aiTools.map((tool, index) => (
-              <RevealSection key={tool.title} delay={index * 0.12}>
-                <Link
-                  to={tool.link}
-                  onClick={() => window.scrollTo(0, 0)}
-                  className="block h-full bg-white rounded-2xl p-8 border border-surface-100 hover:border-surface-200 hover:shadow-2xl hover:shadow-surface-900/8 transition-all duration-500 group"
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {comingSoon.map((c) => (
+                <div
+                  key={c.name}
+                  className="flex items-center gap-3 rounded-2xl border border-dashed border-surface-300 dark:border-surface-700 bg-surface-50/60 dark:bg-surface-900/40 px-4 py-3.5"
                 >
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${tool.color} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300`}>
-                    <tool.icon className="w-7 h-7 text-white" />
+                  <span className="text-2xl leading-none">{c.flag}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-surface-700 dark:text-surface-200 truncate">{c.name}</p>
+                    <p className="text-[0.7rem] font-medium uppercase tracking-wide text-surface-400 dark:text-surface-500">
+                      In progress
+                    </p>
                   </div>
-                  <h3 className="text-xl font-bold text-surface-900 mb-3 group-hover:text-primary-600 transition-colors">
-                    {tool.title}
-                  </h3>
-                  <p className="text-surface-500 leading-relaxed mb-6">
-                    {tool.description}
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {tool.features.map((feat) => (
-                      <span
-                        key={feat}
-                        className="text-xs font-semibold bg-surface-100 text-surface-600 px-3 py-1.5 rounded-lg group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors"
-                      >
-                        {feat}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-2 text-primary-600 font-semibold text-sm opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-                    Try Now Free
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </Link>
-              </RevealSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Planning Tools ───────────────────────────────────────── */}
-      <section className="py-24 bg-white">
-        <div className="page-container">
-          <RevealSection>
-            <SectionHeader
-              title="Plan Your"
-              highlight="Germany Journey"
-              description="Essential tools to help you prepare for studying in Germany."
-            />
-          </RevealSection>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {planningTools.map((tool, index) => (
-              <RevealSection key={tool.title} delay={index * 0.08}>
-                <Link
-                  to={tool.link}
-                  onClick={() => window.scrollTo(0, 0)}
-                  className={`block h-full bg-white rounded-2xl p-7 border border-surface-100 ${tool.borderHover} hover:shadow-xl hover:shadow-surface-900/5 transition-all duration-500 group`}
-                >
-                  <div className={`w-12 h-12 rounded-xl ${tool.bgColor} ${tool.iconColor} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
-                    <tool.icon className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-lg font-bold text-surface-900 mb-2 group-hover:text-primary-600 transition-colors">
-                    {tool.title}
-                  </h3>
-                  <p className="text-sm text-surface-500 leading-relaxed">
-                    {tool.description}
-                  </p>
-                </Link>
-              </RevealSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Testimonials (E-E-A-T) ───────────────────────────────── */}
-      {testimonials.length > 0 && (
-        <section className="py-24 bg-white">
-          <div className="page-container">
-            <RevealSection>
-              <SectionHeader
-                badge="Loved by students"
-                badgeIcon={Users}
-                title="What Students"
-                highlight="Say"
-                description="Real experiences from international students using UniAdvisorAI."
-              />
-            </RevealSection>
-            <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {testimonials.map((t, i) => (
-                <RevealSection key={i} delay={i * 0.08}>
-                  <figure className="h-full bg-surface-50 rounded-2xl p-7 border border-surface-100">
-                    <blockquote className="text-surface-700 leading-relaxed mb-5">“{t.quote}”</blockquote>
-                    <figcaption className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold">
-                        {t.name.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-surface-900 text-sm">{t.name}</div>
-                        <div className="text-xs text-surface-500">{t.detail}</div>
-                      </div>
-                    </figcaption>
-                  </figure>
-                </RevealSection>
+                </div>
               ))}
             </div>
-          </div>
-        </section>
-      )}
 
-      {/* ─── FAQ Section (AEO) ────────────────────────────────────── */}
-      <section className="py-24 bg-surface-50 relative">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(99,102,241,0.04),transparent)]" />
+            <p className="mt-5 text-sm text-surface-500 dark:text-surface-400">
+              Application processes, visa rules and cost data for each country are added the same way
+              Germany was — researched in full before it goes live.
+            </p>
+          </Reveal>
+        </div>
+      </section>
 
-        <div className="page-container relative">
-          <RevealSection>
-            <SectionHeader
-              badge="Frequently Asked Questions"
-              badgeIcon={HelpCircle}
-              badgeColor="bg-blue-100 text-blue-700"
-              title="Everything You Need to Know"
-              description="Common questions about studying in Germany answered."
-            />
-          </RevealSection>
+      {/* ─── FAQ ──────────────────────────────────────────────── */}
+      <section className="py-20 sm:py-24 bg-surface-50 dark:bg-surface-900/40 border-y border-surface-200 dark:border-surface-800">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.02em] text-surface-900 dark:text-white text-center">
+              Questions students ask
+            </h2>
+          </Reveal>
 
-          <div className="max-w-3xl mx-auto space-y-3">
-            {faqItems.map((item, index) => (
-              <FAQItem
-                key={index}
-                question={item.question}
-                answer={item.answer}
-                index={index}
-              />
+          <div className="mt-12 space-y-3">
+            {faqs.map((f, i) => (
+              <Reveal key={f.q} delay={i * 0.04}>
+                <div className="rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 overflow-hidden">
+                  <button
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
+                    aria-expanded={openFaq === i}
+                  >
+                    <span className="text-base font-semibold text-surface-900 dark:text-white">{f.q}</span>
+                    <span
+                      className={`shrink-0 w-7 h-7 rounded-full bg-surface-100 dark:bg-surface-800 text-surface-500 dark:text-surface-400 flex items-center justify-center transition-transform duration-200 ${
+                        openFaq === i ? 'rotate-45' : ''
+                      }`}
+                    >
+                      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                    </span>
+                  </button>
+                  {openFaq === i && (
+                    <div className="px-6 pb-5 -mt-1">
+                      <p className="text-sm leading-relaxed text-surface-600 dark:text-surface-400">{f.a}</p>
+                    </div>
+                  )}
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── Footer ───────────────────────────────────────────────── */}
+      {/* ─── Final CTA ────────────────────────────────────────── */}
+      <section className="py-20 sm:py-28">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal>
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-700 via-primary-600 to-primary-800 px-8 py-16 sm:px-16 text-center">
+              <div aria-hidden className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/10 blur-3xl" />
+              <div className="relative">
+                <Building2 className="w-10 h-10 text-white/80 mx-auto" />
+                <h2 className="mt-6 text-3xl sm:text-4xl font-extrabold tracking-[-0.02em] text-white">
+                  Your German degree starts with one profile
+                </h2>
+                <p className="mt-4 text-lg text-primary-50/90 max-w-xl mx-auto">
+                  Five minutes to set up. Nothing to pay, now or later.
+                </p>
+                <Link
+                  to="/register"
+                  className="mt-9 inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-primary-700 bg-white hover:bg-primary-50 rounded-xl shadow-xl transition-all active:scale-[0.98]"
+                >
+                  Create your free account
+                  <Sparkles className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       <Footer />
     </div>
   );

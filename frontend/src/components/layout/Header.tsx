@@ -9,6 +9,7 @@ import { profileApi } from '../../api/profile';
 import { countries } from '../../data/countries';
 import Button from '../ui/Button';
 import { NotificationBell } from '../notifications';
+import Logo from '../common/Logo';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -84,14 +85,13 @@ export default function Header() {
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-2">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-600 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/20">
-              <GraduationCap className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-lg text-surface-900 dark:text-white hidden sm:block">
-              Uni<span className="text-primary-600">Advisor</span>
-            </span>
-          </Link>
+          <Logo
+            to="/"
+            idSuffix="header"
+            className="shrink-0"
+            markClassName="w-9 h-9 shadow-lg shadow-primary-500/20 rounded-xl"
+            wordmarkClassName="text-lg hidden sm:block"
+          />
 
           {/* Desktop Navigation - Centered with overflow protection */}
           <nav className="hidden lg:flex items-center justify-center flex-1 min-w-0 mx-2">

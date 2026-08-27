@@ -1803,8 +1803,8 @@ const GermanyCostOfLiving = () => {
                             "description": cityData
                                 ? `Detailed breakdown of living expenses in ${cityData.name}. Average student budget: €${cityData.total}/month.`
                                 : "Comprehensive guide to monthly expenses, rent, and student budget in Germany for 2025.",
-                            "author": { "@type": "Organization", "name": "UniAdvisorAI" },
-                            "publisher": { "@type": "Organization", "name": "UniAdvisorAI" }
+                            "author": { "@type": "Organization", "name": "CampusConsult" },
+                            "publisher": { "@type": "Organization", "name": "CampusConsult" }
                         },
                         {
                             "@type": "FAQPage",

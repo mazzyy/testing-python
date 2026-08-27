@@ -101,7 +101,7 @@ export default function UniversitiesPage() {
     return (
         <div className="page-container py-8">
             <SEO
-                title="Top Universities in Germany 2025 — Rankings & Admission Guide | UniAdvisorAI"
+                title="Top Universities in Germany 2025 — Rankings & Admission Guide | CampusConsult"
                 description="Explore 400+ top-ranked German universities. Compare programs, tuition fees, admission requirements & student reviews. Find your perfect university in Germany."
                 keywords={['universities in germany', 'study in germany', 'german universities', 'ranking', 'tuition fees', 'admission requirements']}
                 schema={schema}

@@ -2452,7 +2452,7 @@ const CVGeneratorPage: React.FC = () => {
     const toolsSchema = {
         "@context": "https://schema.org",
         "@type": "WebApplication",
-        "name": "UniAdvisorAI Lebenslauf Generator",
+        "name": "CampusConsult Lebenslauf Generator",
         "url": "https://www.uniadvisorai.com/tools/cv-generator",
         "description": "Free AI-powered German academic CV (Lebenslauf) generator. Creates DIN 5008-compliant CVs for university applications, job applications, and scholarship submissions.",
         "applicationCategory": "BusinessApplication",
@@ -2461,7 +2461,7 @@ const CVGeneratorPage: React.FC = () => {
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
         "author": {
             "@type": "Organization",
-            "name": "UniAdvisorAI",
+            "name": "CampusConsult",
             "url": "https://www.uniadvisorai.com"
         }
     };
@@ -2523,7 +2523,7 @@ const CVGeneratorPage: React.FC = () => {
                 "name": "Is this CV generator really free?",
                 "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Yes, the UniAdvisorAI Lebenslauf Generator is 100% free. You can generate, edit, and download your CV without any charges or hidden fees. We also offer AI-powered feedback and improvement suggestions at no cost."
+                    "text": "Yes, the CampusConsult Lebenslauf Generator is 100% free. You can generate, edit, and download your CV without any charges or hidden fees. We also offer AI-powered feedback and improvement suggestions at no cost."
                 }
             }
         ]
@@ -2533,7 +2533,7 @@ const CVGeneratorPage: React.FC = () => {
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-surface-900 dark:via-surface-900 dark:to-surface-800">
             <div className="container mx-auto px-4 py-8 max-w-7xl">
                 <SEO
-                    title="Free AI Lebenslauf Generator 2025 — German Academic CV Builder | UniAdvisorAI"
+                    title="Free AI Lebenslauf Generator 2025 — German Academic CV Builder | CampusConsult"
                     description="Create a professional German Lebenslauf (CV) for university & job applications. AI formats your resume to DIN 5008 standards — download as PDF instantly, 100% free."
                     keywords={['german cv generator', 'lebenslauf maker', 'academic cv germany', 'german cv format', 'lebenslauf generator', 'DIN 5008 cv', 'german resume builder']}
                     schema={[toolsSchema, faqSchema]}

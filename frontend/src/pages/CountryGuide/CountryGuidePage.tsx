@@ -91,10 +91,10 @@ export default function CountryGuidePage() {
             "@type": "Article",
             "headline": `How to Study in Germany from ${countryData.name} — Complete Guide 2025`,
             "description": pageDescription,
-            "author": { "@type": "Organization", "name": "UniAdvisorAI" },
+            "author": { "@type": "Organization", "name": "CampusConsult" },
             "publisher": {
                 "@type": "Organization",
-                "name": "UniAdvisorAI",
+                "name": "CampusConsult",
                 "logo": { "@type": "ImageObject", "url": "https://www.uniadvisorai.com/logo.png" }
             },
             "mainEntityOfPage": { "@type": "WebPage", "@id": `https://www.uniadvisorai.com/study-in-germany/from/${countryData.slug}` },

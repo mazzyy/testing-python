@@ -1344,11 +1344,11 @@ export default function VisaGuidePage() {
         "description": "Complete guide for international students on German student visa application, required documents, step-by-step process, and post-arrival registration.",
         "author": {
             "@type": "Organization",
-            "name": "UniAdvisorAI"
+            "name": "CampusConsult"
         },
         "publisher": {
             "@type": "Organization",
-            "name": "UniAdvisorAI",
+            "name": "CampusConsult",
             "logo": {
                 "@type": "ImageObject",
                 "url": "https://www.uniadvisorai.com/logo.png"
@@ -1386,7 +1386,7 @@ export default function VisaGuidePage() {
     return (
         <>
             <SEO
-                title="German Student Visa Guide 2025 — Step-by-Step Application Process | UniAdvisorAI"
+                title="German Student Visa Guide 2025 — Step-by-Step Application Process | CampusConsult"
                 description="Complete 2025 guide to the German student visa: required documents, Sperrkonto (blocked account), embassy interview tips, Anmeldung & residence permit — with country-specific timelines."
                 keywords={['German student visa', 'study in Germany visa 2025', 'Sperrkonto', 'blocked account', 'visa application Germany', 'Anmeldung', 'residence permit', 'international students Germany']}
                 schema={combinedSchema}

@@ -293,7 +293,7 @@ export default function ProgramDetailPage() {
     ? '' 
     : `${program.degree_type === 'Bachelor' ? 'BSc ' : program.degree_type === 'Masters' ? 'MSc ' : (program.degree_type ? program.degree_type + ' ' : '')}`;
 
-  const pageTitle = `${degreePrefix}${program.program_name} at ${program.university_name} (English) | UniAdvisorAI`;
+  const pageTitle = `${degreePrefix}${program.program_name} at ${program.university_name} (English) | CampusConsult`;
   const pageDescription = `Study ${program.program_name} (${program.degree_type}) at ${program.university_name}, ${program.city}. Duration: ${program.programme_duration}. Tuition: ${program.tuition_fees_per_semester_eur || 'None'}. Check admission requirements.`;
 
   // Tabs configuration

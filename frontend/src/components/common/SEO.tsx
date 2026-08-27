@@ -21,8 +21,8 @@ export default function SEO({
     schema
 }: SEOProps) {
     const location = useLocation();
-    const siteTitle = 'UniAdvisorAI | AI University Advisor & Study Abroad Platform';
-    const fullTitle = title === 'Home' ? siteTitle : title.includes('UniAdvisorAI') ? title : `${title} | UniAdvisorAI`;
+    const siteTitle = 'CampusConsult | AI University Advisor & Study Abroad Platform';
+    const fullTitle = title === 'Home' ? siteTitle : title.includes('CampusConsult') ? title : `${title} | CampusConsult`;
 
     // Auto-generate canonical URL if not explicitly provided
     const siteOrigin = 'https://www.uniadvisorai.com';

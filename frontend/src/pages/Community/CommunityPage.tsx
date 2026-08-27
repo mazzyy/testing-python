@@ -152,7 +152,7 @@ const CommunityPage: React.FC = () => {
         <div className="min-h-screen relative z-[1] bg-gray-50 dark:bg-surface-900 overflow-x-hidden">
             <div className="container mx-auto px-4 py-8 max-w-6xl">
                 <SEO
-                    title="Student Community — Ask Questions & Share Experiences | UniAdvisorAI"
+                    title="Student Community — Ask Questions & Share Experiences | CampusConsult"
                     description="Join 1,000+ international students discussing life in Germany. Get answers on visas, housing, admissions, student jobs & daily life — from students who've been there."
                     keywords={['student community germany', 'study in germany forum', 'german student visa questions', 'student housing germany discussions', 'international students germany forum']}
                 />
