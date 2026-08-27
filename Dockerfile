@@ -1,72 +1,61 @@
-# syntax=docker/dockerfile:1.7
 
-FROM node:22-alpine3.22 AS build
+# Stage 1: Build Frontend
+FROM node:20-alpine AS frontend-build
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ .
+RUN npx vite build
 
+# Stage 2: Final Image (Python + Nginx)
+FROM python:3.11-slim
+
+# Install Nginx, envsubst (gettext-base), and system dependencies
+RUN apt-get update && apt-get install -y \
+    nginx \
+    gettext-base \
+    gcc \
+    g++ \
+    libpoppler-cpp-dev \
+    tesseract-ocr \
+    libtesseract-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup Backend
 WORKDIR /app
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY backend/ .
 
-COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund
+# Setup Frontend (Copy from build stage)
+COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
 
-COPY index.html ./
-COPY src/ ./src/
+# Create nginx config template directory and write template
+# Uses NGINX_PORT which gets substituted at runtime via envsubst
+RUN mkdir -p /etc/nginx/templates && \
+    printf 'server {\n\
+    listen %s;\n\
+    location / {\n\
+        root /usr/share/nginx/html;\n\
+        index index.html;\n\
+        try_files $uri $uri/ /index.html;\n\
+    }\n\
+    location /api/ {\n\
+        proxy_pass http://127.0.0.1:8000/api/;\n\
+        proxy_set_header Host $host;\n\
+        proxy_set_header X-Real-IP $remote_addr;\n\
+    }\n\
+}\n' '${NGINX_PORT}' > /etc/nginx/templates/default.conf.template
 
-RUN npm run build
+# Create start script
+RUN printf '#!/bin/bash\n\
+# Heroku provides $PORT, default to 80 for local dev\n\
+export NGINX_PORT=${PORT:-80}\n\
+# Substitute NGINX_PORT into nginx config\n\
+envsubst '"'"'${NGINX_PORT}'"'"' < /etc/nginx/templates/default.conf.template > /etc/nginx/sites-available/default\n\
+# Start nginx in background\n\
+service nginx start\n\
+# Start backend (uvicorn)\n\
+exec uvicorn app.main:app --host 0.0.0.0 --port 8000\n' > /start.sh && chmod +x /start.sh
 
-FROM alpine:3.22 AS runtime
-
-RUN apk add --no-cache nginx \
-    && rm -rf /usr/share/nginx/html/* \
-    && cat > /etc/nginx/nginx.conf <<'EOF'
-worker_processes auto;
-pid /tmp/nginx.pid;
-error_log /dev/stderr warn;
-
-events {
-    worker_connections 1024;
-}
-
-http {
-    include /etc/nginx/mime.types;
-    default_type application/octet-stream;
-
-    access_log /dev/stdout;
-    sendfile on;
-    server_tokens off;
-
-    client_body_temp_path /tmp/nginx/client_temp;
-    proxy_temp_path       /tmp/nginx/proxy_temp;
-    fastcgi_temp_path     /tmp/nginx/fastcgi_temp;
-    uwsgi_temp_path       /tmp/nginx/uwsgi_temp;
-    scgi_temp_path        /tmp/nginx/scgi_temp;
-
-    server {
-        listen 0.0.0.0:8080;
-        listen [::]:8080;
-        server_name _;
-
-        root /usr/share/nginx/html;
-        index index.html;
-
-        location = /healthz {
-            access_log off;
-            default_type text/plain;
-            return 200 'ok\n';
-        }
-
-        location / {
-            try_files $uri $uri/ /index.html;
-        }
-    }
-}
-EOF
-
-COPY --from=build --chown=nginx:nginx /app/dist/ /usr/share/nginx/html/
-
-USER nginx
-
-EXPOSE 8080
-
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget -q -O /dev/null http://127.0.0.1:8080/healthz || exit 1
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/start.sh"]

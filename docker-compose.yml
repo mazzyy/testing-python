@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: uniadvisor-db
+    environment:
+      POSTGRES_USER: uniadvisor
+      POSTGRES_PASSWORD: uniadvisor_password
+      POSTGRES_DB: uniadvisor_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: uniadvisor-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/chroma_db:/app/chroma_db
+      - ./backend/uploads:/app/uploads
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=postgresql://uniadvisor:uniadvisor_password@db:5432/uniadvisor_db
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: uniadvisor-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

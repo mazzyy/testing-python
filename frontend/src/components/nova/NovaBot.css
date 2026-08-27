@@ -1,0 +1,1253 @@
+/* ─── Nova Bot Floating Widget ─────────────────────────────────────── */
+
+/* Floating animation for the Nova character */
+@keyframes nova-float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes nova-float-slow {
+
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+
+  50% {
+    transform: translateY(-4px) scale(1.02);
+  }
+}
+
+/* Eye blinking - scales only the Y axis of the eye elements */
+@keyframes nova-blink {
+
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
+/* Antenna pulse (if you want the top part to do something) */
+@keyframes nova-antenna {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+    filter: drop-shadow(0 0 4px #818cf8);
+  }
+}
+
+.nova-antenna-light {
+  animation: nova-antenna 2s infinite ease-in-out;
+}
+
+/* Pulse glow behind the character */
+@keyframes nova-glow {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.3));
+  }
+
+  50% {
+    filter: drop-shadow(0 8px 20px rgba(99, 102, 241, 0.5));
+  }
+}
+
+/* Happy bounce */
+@keyframes nova-bounce {
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  25% {
+    transform: translateY(-8px) scale(1.05);
+  }
+
+  50% {
+    transform: translateY(-2px) scale(0.98);
+  }
+
+  75% {
+    transform: translateY(-5px) scale(1.02);
+  }
+}
+
+/* Thinking wobble */
+@keyframes nova-think {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  25% {
+    transform: translateY(-3px) rotate(2deg);
+  }
+
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  75% {
+    transform: translateY(-3px) rotate(-2deg);
+  }
+}
+
+/* Waving animation */
+@keyframes nova-wave {
+
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+
+  20% {
+    transform: rotate(8deg) translateY(-4px);
+  }
+
+  40% {
+    transform: rotate(-4deg) translateY(-2px);
+  }
+
+  60% {
+    transform: rotate(8deg) translateY(-4px);
+  }
+
+  80% {
+    transform: rotate(-2deg) translateY(-1px);
+  }
+}
+
+/* Label "Ask Nova" subtle pulse */
+@keyframes nova-label-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Chat typing dots */
+@keyframes nova-dot-bounce {
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ─── Component Classes ────────────────────────────────────────────── */
+
+.nova-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.nova-container>* {
+  pointer-events: auto;
+}
+
+/* The floating character button */
+.nova-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  outline: none;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.nova-avatar {
+  /* We remove the background gradient since the SVG itself provides the shape and color */
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: nova-float 3s ease-in-out infinite, nova-glow 4s ease-in-out infinite;
+  transition: transform 0.3s ease;
+  position: relative;
+  overflow: visible;
+}
+
+.nova-trigger:hover .nova-avatar {
+  transform: scale(1.08);
+}
+
+.nova-avatar.happy {
+  animation: nova-bounce 0.8s ease-in-out 3, nova-glow 4s ease-in-out infinite;
+}
+
+.nova-avatar.thinking {
+  animation: nova-think 1.5s ease-in-out infinite, nova-glow 4s ease-in-out infinite;
+}
+
+.nova-avatar.waving {
+  animation: nova-wave 3s ease-in-out infinite, nova-glow 4s ease-in-out infinite;
+}
+
+/* Eyes */
+.nova-eye-container {
+  animation: nova-blink 4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* ─── Chat Panel ───────────────────────────────────────────────────── */
+
+.nova-chat-panel {
+  width: 380px;
+  max-height: 520px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (max-width: 480px) {
+  .nova-chat-panel {
+    width: calc(100vw - 32px);
+    max-height: 70vh;
+    right: 0;
+  }
+
+  .nova-container {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+
+.nova-chat-header {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nova-chat-header-avatar {
+  width: 36px;
+  height: 36px;
+  /* Replaced border-radius & bg with flex center since SVG provides it */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.nova-chat-header-info h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.nova-chat-header-info p {
+  font-size: 11px;
+  opacity: 0.8;
+  margin: 2px 0 0 0;
+}
+
+.nova-chat-close {
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.nova-chat-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Messages area */
+.nova-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.nova-chat-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.nova-chat-messages::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.nova-msg {
+  display: flex;
+  gap: 8px;
+  max-width: 88%;
+}
+
+.nova-msg.user {
+  flex-direction: row-reverse;
+  align-self: flex-end;
+}
+
+.nova-msg.assistant {
+  align-self: flex-start;
+}
+
+.nova-msg-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nova-msg.assistant .nova-msg-avatar {
+  background: transparent;
+  /* SVG handles this */
+}
+
+.nova-msg.user .nova-msg-avatar {
+  background: #e2e8f0;
+}
+
+.nova-msg-bubble {
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.nova-msg.assistant .nova-msg-bubble {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-bottom-left-radius: 4px;
+}
+
+.nova-msg.user .nova-msg-bubble {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+/* Typing indicator */
+.nova-typing {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+  align-items: center;
+}
+
+.nova-typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #94a3b8;
+  animation: nova-dot-bounce 1.4s ease-in-out infinite;
+}
+
+.nova-typing-dot:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.nova-typing-dot:nth-child(2) {
+  animation-delay: 200ms;
+}
+
+.nova-typing-dot:nth-child(3) {
+  animation-delay: 400ms;
+}
+
+/* Input area */
+.nova-chat-input-container {
+  padding: 16px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  background: white;
+}
+
+.nova-chat-input-wrapper {
+  flex: 1;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 12px 16px;
+  background: white;
+  display: flex;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.nova-chat-input-wrapper:focus-within {
+  border-color: #a5b4fc;
+  box-shadow: 0 0 0 3px rgba(165, 180, 252, 0.2);
+}
+
+.nova-chat-input-wrapper textarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  color: #334155;
+  font-family: inherit;
+  max-height: 80px;
+}
+
+.nova-chat-input-wrapper textarea::placeholder {
+  color: #94a3b8;
+}
+
+.nova-chat-send {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #a5b4fc;
+  /* Soft purple from mockup */
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.nova-chat-send svg {
+  /* Using lucide-react, the icon size will be controlled there but we ensure center */
+  transform: translateX(-1px) translateY(1px);
+  /* Slight tweak for optical center of send icon */
+}
+
+.nova-chat-send:hover:not(:disabled) {
+  background: #818cf8;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(165, 180, 252, 0.4);
+}
+
+.nova-chat-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #cbd5e1;
+}
+
+/* Quick questions */
+.nova-quick-questions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+
+.nova-quick-q {
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 24px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.nova-quick-q:hover {
+  background: #eef2ff;
+  border-color: #a5b4fc;
+  color: #4f46e5;
+}
+
+/* Welcome state (no messages) */
+.nova-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px 20px;
+  text-align: center;
+  flex: 1;
+}
+
+.nova-welcome-avatar {
+  margin-bottom: 24px;
+  animation: nova-float-slow 3s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nova-welcome h4 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px;
+}
+
+.nova-welcome p {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+  max-width: 320px;
+}
+
+/* Login prompt */
+.nova-login-prompt {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.nova-login-prompt p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 16px;
+}
+
+.nova-login-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 24px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.nova-login-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+}
+
+/* Markdown in Nova messages */
+.nova-msg-bubble p {
+  margin: 0 0 8px;
+}
+
+.nova-msg-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.nova-msg-bubble ul,
+.nova-msg-bubble ol {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+
+.nova-msg-bubble li {
+  margin: 2px 0;
+}
+
+.nova-msg-bubble strong {
+  font-weight: 600;
+  color: #4f46e5;
+}
+
+.nova-msg.user .nova-msg-bubble strong {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.nova-msg-bubble a {
+  color: #4f46e5;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.nova-msg.user .nova-msg-bubble a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Rate limit banner */
+.nova-limit-banner {
+  padding: 12px 16px;
+  background: #fffbeb;
+  border-top: 1px solid #fef3c7;
+  text-align: center;
+}
+
+.nova-limit-banner p {
+  font-size: 12px;
+  color: #92400e;
+  margin: 0;
+  font-weight: 500;
+}
+
+.nova-root {
+  --nova-bg: #0F0F1A;
+  --nova-surface: rgba(255, 255, 255, 0.03);
+  --nova-glass: rgba(255, 255, 255, 0.06);
+  --nova-glass-border: rgba(255, 255, 255, 0.1);
+  --nova-text: #E8E8F0;
+  --nova-text-dim: #8B8BA0;
+  --nova-accent-1: #8B5CF6;
+  --nova-accent-2: #3B82F6;
+  --nova-accent-3: #6EE7B7;
+  --nova-gradient: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #6EE7B7 100%);
+  --nova-panel-bg: #16162A;
+  --nova-msg-bot: rgba(139, 92, 246, 0.08);
+  --nova-msg-user-gradient: linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%);
+  --nova-radius: 20px;
+  --nova-font: 'DM Sans', -apple-system, sans-serif;
+  --nova-font-mono: 'Space Mono', monospace;
+}
+
+.nova-root * {
+  box-sizing: border-box;
+}
+
+.nova-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+  font-family: var(--nova-font);
+}
+
+/* ─── Trigger Button ──────────────────────────── */
+.nova-trigger {
+  position: relative;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nova-trigger-glow {
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.18) 0%, transparent 70%);
+  animation: nova-pulse-glow 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes nova-pulse-glow {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: scale(1.12);
+    opacity: 0.8;
+  }
+}
+
+.nova-avatar-wrap {
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: visible;
+  filter: drop-shadow(0 4px 12px rgba(139, 92, 246, 0.25));
+}
+
+.nova-avatar-float {
+  animation: nova-float 3.5s ease-in-out infinite;
+}
+
+@keyframes nova-float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.nova-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background: #EF4444;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  border: 2px solid var(--nova-panel-bg);
+  font-family: var(--nova-font-mono);
+}
+
+/* ─── Chat Panel ──────────────────────────────── */
+.nova-panel {
+  width: 400px;
+  max-height: 560px;
+  background: var(--nova-panel-bg);
+  border-radius: var(--nova-radius);
+  border: 1px solid var(--nova-glass-border);
+  box-shadow:
+    0 32px 64px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 0 120px rgba(139, 92, 246, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+@media (max-width: 480px) {
+  .nova-panel {
+    width: calc(100vw - 32px);
+    max-height: 70vh;
+  }
+
+  .nova-container {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+
+/* ─── Header ──────────────────────────────────── */
+.nova-header {
+  position: relative;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--nova-glass-border);
+  overflow: hidden;
+}
+
+.nova-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+}
+
+.nova-header-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--nova-glass);
+  border: 1px solid var(--nova-glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.nova-header-info {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.nova-header-info h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--nova-text);
+  letter-spacing: -0.02em;
+}
+
+.nova-header-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.nova-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--nova-accent-3);
+  box-shadow: 0 0 6px var(--nova-accent-3);
+  animation: nova-status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes nova-status-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.nova-header-status span {
+  font-size: 11px;
+  color: var(--nova-text-dim);
+  font-weight: 500;
+}
+
+.nova-close {
+  position: relative;
+  z-index: 1;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid var(--nova-glass-border);
+  background: var(--nova-glass);
+  color: var(--nova-text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nova-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--nova-text);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ─── Messages ────────────────────────────────── */
+.nova-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+.nova-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.nova-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nova-messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.nova-msg {
+  display: flex;
+  gap: 10px;
+  max-width: 85%;
+}
+
+.nova-msg-user {
+  flex-direction: row-reverse;
+  align-self: flex-end;
+}
+
+.nova-msg-bot {
+  align-self: flex-start;
+}
+
+.nova-msg-avi {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.nova-msg-bot .nova-msg-avi {
+  background: var(--nova-glass);
+  border: 1px solid var(--nova-glass-border);
+}
+
+.nova-msg-user .nova-msg-avi {
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.nova-bubble {
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  position: relative;
+}
+
+.nova-msg-bot .nova-bubble {
+  background: var(--nova-msg-bot);
+  border: 1px solid rgba(139, 92, 246, 0.08);
+  color: var(--nova-text);
+  border-bottom-left-radius: 6px;
+}
+
+.nova-msg-user .nova-bubble {
+  background: var(--nova-msg-user-gradient);
+  color: white;
+  border-bottom-right-radius: 6px;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.3);
+}
+
+.nova-bubble p {
+  margin: 0 0 8px;
+}
+
+.nova-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.nova-bubble strong {
+  font-weight: 600;
+  color: var(--nova-accent-1);
+}
+
+.nova-msg-user .nova-bubble strong {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.nova-bubble a {
+  color: var(--nova-accent-2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.nova-msg-user .nova-bubble a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ─── Typing Indicator ────────────────────────── */
+.nova-typing {
+  display: flex;
+  gap: 5px;
+  padding: 4px 0;
+  align-items: center;
+}
+
+.nova-typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--nova-accent-1);
+  opacity: 0.4;
+}
+
+.nova-typing-dot:nth-child(1) {
+  animation: nova-dot 1.4s ease-in-out infinite 0ms;
+}
+
+.nova-typing-dot:nth-child(2) {
+  animation: nova-dot 1.4s ease-in-out infinite 200ms;
+}
+
+.nova-typing-dot:nth-child(3) {
+  animation: nova-dot 1.4s ease-in-out infinite 400ms;
+}
+
+@keyframes nova-dot {
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.3;
+  }
+
+  40% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* ─── Welcome ─────────────────────────────────── */
+.nova-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 24px 16px;
+  text-align: center;
+  flex: 1;
+}
+
+.nova-welcome h4 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--nova-text);
+  margin: 0 0 8px;
+  letter-spacing: -0.03em;
+  background: var(--nova-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nova-welcome p {
+  font-size: 14px;
+  color: var(--nova-text-dim);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 300px;
+}
+
+/* ─── Quick Questions ─────────────────────────── */
+.nova-quicks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 16px 16px;
+  justify-content: center;
+}
+
+.nova-quick-btn {
+  font-size: 12.5px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--nova-glass-border);
+  background: var(--nova-glass);
+  color: var(--nova-text-dim);
+  cursor: pointer;
+  transition: all 0.25s;
+  font-family: var(--nova-font);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.nova-quick-btn:hover {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: var(--nova-text);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+}
+
+/* ─── Input Area ──────────────────────────────── */
+.nova-input-area {
+  padding: 14px 16px;
+  border-top: 1px solid var(--nova-glass-border);
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.nova-input-wrap {
+  flex: 1;
+  border: 1px solid var(--nova-glass-border);
+  border-radius: 16px;
+  padding: 10px 14px;
+  background: var(--nova-surface);
+  display: flex;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.nova-input-wrap:focus-within {
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.nova-input-wrap textarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  color: var(--nova-text);
+  font-family: var(--nova-font);
+  max-height: 100px;
+}
+
+.nova-input-wrap textarea::placeholder {
+  color: var(--nova-text-dim);
+}
+
+.nova-send-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.nova-send-btn:not(:disabled) {
+  background: var(--nova-msg-user-gradient);
+  color: white;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35);
+}
+
+.nova-send-btn:not(:disabled):hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.45);
+}
+
+.nova-send-btn:disabled {
+  background: var(--nova-glass);
+  color: var(--nova-text-dim);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ─── Scroll Down Button ──────────────────────── */
+.nova-scroll-down {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--nova-panel-bg);
+  border: 1px solid var(--nova-glass-border);
+  color: var(--nova-text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Login Prompt ────────────────────────────── */
+.nova-login-section {
+  text-align: center;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.nova-login-section p {
+  font-size: 13.5px;
+  color: var(--nova-text-dim);
+  margin: 0;
+  line-height: 1.5;
+  max-width: 280px;
+}
+
+.nova-login-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 24px;
+  border-radius: 14px;
+  background: var(--nova-msg-user-gradient);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-family: var(--nova-font);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35);
+}
+
+.nova-login-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.45);
+}
+
+/* ─── Rate Limit Banner ───────────────────────── */
+.nova-limit {
+  padding: 12px 16px;
+  background: rgba(245, 158, 11, 0.1);
+  border-top: 1px solid rgba(245, 158, 11, 0.15);
+  text-align: center;
+}
+
+.nova-limit p {
+  font-size: 12px;
+  color: #F59E0B;
+  margin: 0;
+  font-weight: 500;
+}

@@ -1,0 +1,103 @@
+
+# Stage 1: Build Frontend
+FROM node:20-alpine as frontend-build
+WORKDIR /app/frontend
+# Chromium so the puppeteer prerender step can run (ships fully-rendered HTML for SEO/AEO)
+RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont
+ENV PUPPETEER_SKIP_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ .
+# Build, then prerender SEO-critical routes to static HTML so crawlers/AI engines
+# get full content + JSON-LD without executing JavaScript.
+RUN npx vite build && node scripts/prerender.js
+
+# Stage 2: Final Image (Python + Nginx)
+FROM python:3.11-slim
+
+# Install Nginx and system dependencies
+RUN apt-get update && apt-get install -y \
+    nginx \
+    gcc \
+    g++ \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup Backend
+WORKDIR /app
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY backend/ .
+
+# Setup Frontend (Copy from build stage)
+COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
+
+# Create an Nginx template configuration
+# We will substitute $PORT at runtime
+RUN echo 'server { \
+    listen ${PORT}; \
+    \
+    # Redirect HTTP to HTTPS (Heroku terminates SSL at the router) \
+    if ($http_x_forwarded_proto = "http") { \
+        return 301 https://$host$request_uri; \
+    } \
+    \
+    # Enforce HTTPS at the browser level \
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always; \
+    \
+    location / { \
+        root /usr/share/nginx/html; \
+        index index.html; \
+        try_files $uri $uri/ /index.html; \
+    } \
+    client_max_body_size 10m; \
+    client_body_buffer_size 2m; \
+    \
+    location /api/ { \
+        proxy_pass http://127.0.0.1:8000/api/; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto; \
+        proxy_read_timeout 120s; \
+        proxy_connect_timeout 10s; \
+        proxy_send_timeout 120s; \
+    } \
+}' > /etc/nginx/sites-available/default.template
+
+# Install envsubst logic (gettext-base contains envsubst)
+RUN apt-get update && apt-get install -y gettext-base && rm -rf /var/lib/apt/lists/*
+
+# Create start script, reading $PORT with fallback to 80
+# Memory optimizations for Heroku 512MB dynos:
+#  - MALLOC_ARENA_MAX=2 to reduce glibc memory fragmentation
+#  - OMP_NUM_THREADS=1 to limit OpenMP parallelism
+#  - TOKENIZERS_PARALLELISM=false to prevent HuggingFace tokenizer memory overhead
+# Production setup: Gunicorn (process manager) + Uvicorn workers (ASGI server)
+#  - 2 workers for ~300MB usage (150MB each), leaves buffer on 512MB dyno
+#  - Auto-restarts crashed workers, graceful reloads, better signal handling
+RUN echo '#!/bin/bash\n\
+export PORT=${PORT:-80}\n\
+export MALLOC_ARENA_MAX=2\n\
+export MALLOC_TRIM_THRESHOLD_=100000\n\
+export MALLOC_MMAP_THRESHOLD_=100000\n\
+export OMP_NUM_THREADS=1\n\
+export TOKENIZERS_PARALLELISM=false\n\
+envsubst "\$PORT" < /etc/nginx/sites-available/default.template > /etc/nginx/sites-available/default\n\
+service nginx start\n\
+gunicorn app.main:app \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --workers 2 \
+    --bind 0.0.0.0:8000 \
+    --timeout 120 \
+    --graceful-timeout 30 \
+    --keep-alive 5 \
+    --forwarded-allow-ips="*" \
+    --access-logfile - \
+    --error-logfile - \n\
+' > /start.sh && chmod +x /start.sh
+
+# Note: EXPOSE is informational and Heroku ignores it, but it's good for local testing
+EXPOSE $PORT
+
+CMD ["/start.sh"]

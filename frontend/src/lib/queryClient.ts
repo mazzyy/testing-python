@@ -1,0 +1,14 @@
+import { QueryClient } from '@tanstack/react-query';
+
+/**
+ * Shared QueryClient instance
+ * Exported separately to avoid circular dependencies with main.tsx
+ */
+export const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            staleTime: 1000 * 60 * 5, // 5 minutes
+            retry: 1,
+        },
+    },
+});
