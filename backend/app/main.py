@@ -84,10 +84,30 @@ async def lifespan(app: FastAPI):
     print(f"[START] Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     print("="*60)
     
-    # Initialize database
+    # Initialize database.
+    # Retry rather than dying on the first failure: on a cloud restart the
+    # database can still be waking up, and an unhandled exception here kills
+    # the gunicorn worker, which stops the entire site with a bare 503.
     print("[DB] Initializing database...")
-    init_db()
-    print("[OK] Database initialized")
+    import time as _time
+    _last_err = None
+    for _attempt in range(1, 6):
+        try:
+            init_db()
+            print("[OK] Database initialized")
+            _last_err = None
+            break
+        except Exception as _e:
+            _last_err = _e
+            _wait = 2 ** _attempt
+            print(f"[DB] attempt {_attempt}/5 failed: {type(_e).__name__}: {_e}")
+            if _attempt < 5:
+                print(f"[DB] retrying in {_wait}s ...")
+                _time.sleep(_wait)
+    if _last_err is not None:
+        print("[FATAL] Could not reach the database after 5 attempts.")
+        print("[FATAL] Check DATABASE_URL and that the DB firewall allows this host.")
+        raise _last_err
     
     # Create default admin
     create_default_admin()

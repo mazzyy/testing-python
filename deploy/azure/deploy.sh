@@ -193,17 +193,32 @@ PYEOF
     -g "$RG" -s "$PG" -d "$PG_DB" -o none 2>/dev/null || true
   ok "database $PG_DB ready"
 
-  az postgres flexible-server firewall-rule create \
-    -g "$RG" -n "$PG" --rule-name AllowAzureServices \
-    --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0 -o none 2>/dev/null || true
+  # The app cannot reach the database without this rule, so do NOT swallow a
+  # failure here — a silent miss shows up much later as a 503 with a confusing
+  # "is the server running on that host" error in the container log.
+  if az postgres flexible-server firewall-rule create \
+      -g "$RG" -s "$PG" --rule-name AllowAzureServices \
+      --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0 -o none 2>/dev/null; then
+    ok "Azure services allowed through the Postgres firewall"
+  else
+    if az postgres flexible-server firewall-rule show \
+        -g "$RG" -s "$PG" --rule-name AllowAzureServices >/dev/null 2>&1; then
+      ok "Azure services rule already present"
+    else
+      die "could not create the AllowAzureServices firewall rule — the app will not reach Postgres"
+    fi
+  fi
 
   local myip
   myip="$(curl -s https://api.ipify.org || true)"
   if [ -n "$myip" ]; then
-    az postgres flexible-server firewall-rule create \
-      -g "$RG" -n "$PG" --rule-name "dev-$(echo "$myip" | tr '.' '-')" \
-      --start-ip-address "$myip" --end-ip-address "$myip" -o none 2>/dev/null || true
-    ok "firewall opened for Azure services and your IP ($myip)"
+    if az postgres flexible-server firewall-rule create \
+      -g "$RG" -s "$PG" --rule-name "dev-$(echo "$myip" | tr '.' '-')" \
+      --start-ip-address "$myip" --end-ip-address "$myip" -o none 2>/dev/null; then
+      ok "firewall opened for your IP ($myip)"
+    else
+      warn "could not add a rule for $myip — the seed scripts may not reach the DB"
+    fi
   else
     warn "could not detect your public IP — add a firewall rule manually to run the seeders"
   fi
@@ -302,7 +317,8 @@ show_info() {
   printf "    API docs   %s%s/docs%s\n" "$CB" "$url" "$C0"
   printf "    Registry   %s.azurecr.io\n" "$ACR"
   printf "    Postgres   %s.postgres.database.azure.com\n" "$PG"
-  printf "    Group      %s (%s)\n\n" "$RG" "$LOCATION"
+  printf "    Group      %s\n" "$RG"
+  printf "    Regions    app+db: %s · registry: %s\n\n" "${PG_LOCATION:-$LOCATION}" "$LOCATION"
   printf "  Seed the database from this machine:\n\n"
   printf "    cd backend && source venv/bin/activate\n"
   printf "    export AZ_DB='%s'\n" "$(db_url)"
@@ -325,6 +341,19 @@ case "${1:-all}" in
     ok "redeployed"; show_info ;;
   settings)  preflight; init_state; push_settings; az webapp restart -n "$APP" -g "$RG" -o none; ok "settings pushed" ;;
   logs)      init_state; az webapp log tail -n "$APP" -g "$RG" ;;
+  doctor)
+    init_state
+    step "Postgres"
+    az postgres flexible-server show -g "$RG" -n "$PG" \
+      --query "{state:state, publicAccess:network.publicNetworkAccess, fqdn:fullyQualifiedDomainName, location:location}" -o yaml
+    step "Firewall rules"
+    az postgres flexible-server firewall-rule list -g "$RG" -s "$PG" -o table
+    step "App settings (DATABASE_URL host only)"
+    az webapp config appsettings list -n "$APP" -g "$RG" \
+      --query "[?name=='DATABASE_URL'].value" -o tsv | sed -E 's#//[^@]+@#//***:***@#'
+    step "Container state"
+    az webapp show -n "$APP" -g "$RG" --query "{state:state, availability:availabilityState}" -o yaml
+    ;;
   info)      init_state; admin_email="$(getenv ADMIN_EMAIL)"; show_info ;;
   destroy)
     init_state
