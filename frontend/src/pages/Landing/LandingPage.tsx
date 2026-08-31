@@ -12,11 +12,9 @@ import {
   Calculator,
   FileEdit,
   FileSearch,
-  Award,
   Coins,
   Plane,
   Building2,
-  Target,
   ClipboardList,
   ShieldCheck,
   Clock,
@@ -29,6 +27,7 @@ import { useThemeStore } from '../../store/themeStore';
 import SEO from '../../components/common/SEO';
 import Footer from '../../components/layout/Footer';
 import Logo from '../../components/common/Logo';
+import JourneySection from '../../components/landing/JourneySection';
 import costHeatmap from '../../assets/images/germany_cost_heatmap.webp';
 
 /* ─────────────────────────────────────────────────────────────
@@ -98,21 +97,6 @@ function Counter({ value, suffix = '+' }: { value: number; suffix?: string }) {
   );
 }
 
-/** Screenshot in a neutral browser chrome, so product shots read as product shots. */
-function Screenshot({ src, alt }: { src: string; alt: string }) {
-  return (
-    <div className="rounded-2xl overflow-hidden border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 shadow-2xl shadow-surface-900/10 dark:shadow-black/40">
-      <div className="flex items-center gap-1.5 px-4 py-3 bg-surface-100 dark:bg-surface-800 border-b border-surface-200 dark:border-surface-700">
-        <span className="w-2.5 h-2.5 rounded-full bg-surface-300 dark:bg-surface-600" />
-        <span className="w-2.5 h-2.5 rounded-full bg-surface-300 dark:bg-surface-600" />
-        <span className="w-2.5 h-2.5 rounded-full bg-surface-300 dark:bg-surface-600" />
-        <span className="ml-3 h-5 w-full max-w-[13rem] rounded-md bg-white dark:bg-surface-900" />
-      </div>
-      <img src={src} alt={alt} loading="lazy" decoding="async" className="block w-full" />
-    </div>
-  );
-}
-
 /* ─────────────────────────────────────────────────────────────
    Content
    ───────────────────────────────────────────────────────────── */
@@ -130,49 +114,6 @@ const toolLinks = [
   { name: 'Grade Calculator', path: '/german-grade-calculator', icon: Calculator },
   { name: 'Visa Guide', path: '/visa-guide', icon: Plane },
   { name: 'Survival Guides', path: '/tools/survival-guides', icon: ClipboardList },
-];
-
-const showcase = [
-  {
-    eyebrow: 'AI matching',
-    icon: Target,
-    title: 'Programs you can actually get into',
-    body: 'Describe your background once. The advisor reads your grades, degree and language level, then ranks German programs by fit — with degree, field, language and GPA checked off individually, so you can see why each one matched.',
-    points: ['Match score per program', 'Eligibility gaps flagged upfront', 'Follow-up questions in chat'],
-    image: '/features/ai-matching.webp',
-    to: '/programs',
-    cta: 'Browse programs',
-  },
-  {
-    eyebrow: 'Application tracker',
-    icon: ClipboardList,
-    title: 'Every deadline on one board',
-    body: 'Shortlist, documents, uni-assist status, portal logins and visa appointment in a single view. Nothing lives in a spreadsheet you forget to open.',
-    points: ['Stage-by-stage progress', 'Document checklist per university', 'Deadline reminders'],
-    image: '/features/application-tracker.webp',
-    to: '/applications',
-    cta: 'See the tracker',
-  },
-  {
-    eyebrow: 'Documents',
-    icon: FileEdit,
-    title: 'SOP and CV, drafted for the program',
-    body: 'Generates a statement of purpose and a German-format CV from your profile, tailored to the specific program — then lets you edit every paragraph before you export.',
-    points: ['Program-specific drafts', 'German CV conventions', 'Export to PDF or Word'],
-    image: '/features/sop-generator.webp',
-    to: '/tools/sop-generator',
-    cta: 'Try the SOP generator',
-  },
-  {
-    eyebrow: 'Funding',
-    icon: Award,
-    title: 'Scholarships filtered to you',
-    body: 'DAAD, Erasmus+, foundation and state scholarships matched against your nationality, field and level — with deadlines and eligibility, not a list you have to read yourself.',
-    points: ['Nationality-aware filtering', 'Deadline tracking', 'Direct application links'],
-    image: '/features/scholarship-finder.webp',
-    to: '/scholarships',
-    cta: 'Find scholarships',
-  },
 ];
 
 const extras = [
@@ -194,12 +135,6 @@ const extras = [
     body: 'Anmeldung, blocked accounts, health insurance, SIM cards — the admin no one warns you about.',
     to: '/tools/survival-guides',
   },
-];
-
-const steps = [
-  { n: '01', title: 'Build your profile', body: 'Grades, degree, language level, budget and what you want to study. About five minutes.' },
-  { n: '02', title: 'Get matched', body: 'The AI searches thousands of German programs and returns the ones that fit, with eligibility flagged.' },
-  { n: '03', title: 'Apply and track', body: 'Generate your documents, follow the checklist, and watch every deadline from one dashboard.' },
 ];
 
 const comingSoon = [
@@ -552,60 +487,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── Showcase ─────────────────────────────────────────── */}
-      <section className="py-20 sm:py-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="max-w-2xl">
-            <span className="text-sm font-semibold uppercase tracking-wider text-primary-600 dark:text-primary-400">
-              What you get
-            </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-[-0.02em] text-surface-900 dark:text-white">
-              The whole application, in one place
-            </h2>
-            <p className="mt-4 text-lg text-surface-600 dark:text-surface-300">
-              From the first search to the day your visa is stamped.
-            </p>
-          </Reveal>
-
-          <div className="mt-16 space-y-24 sm:space-y-28">
-            {showcase.map((s, i) => (
-              <Reveal key={s.title}>
-                <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-                  <div className={i % 2 === 1 ? 'lg:order-2' : ''}>
-                    <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary-600 dark:text-primary-400">
-                      <s.icon className="w-4 h-4" />
-                      {s.eyebrow}
-                    </span>
-                    <h3 className="mt-3 text-2xl sm:text-3xl font-bold tracking-[-0.02em] text-surface-900 dark:text-white">
-                      {s.title}
-                    </h3>
-                    <p className="mt-4 text-base leading-relaxed text-surface-600 dark:text-surface-300">{s.body}</p>
-                    <ul className="mt-6 space-y-2.5">
-                      {s.points.map((p) => (
-                        <li key={p} className="flex items-start gap-2.5 text-sm text-surface-700 dark:text-surface-300">
-                          <Check className="w-4 h-4 mt-0.5 shrink-0 text-primary-600 dark:text-primary-400" />
-                          {p}
-                        </li>
-                      ))}
-                    </ul>
-                    <Link
-                      to={s.to}
-                      className="mt-7 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:gap-2.5 transition-all"
-                    >
-                      {s.cta}
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </div>
-
-                  <div className={i % 2 === 1 ? 'lg:order-1' : ''}>
-                    <Screenshot src={s.image} alt={s.title} />
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
+      <JourneySection />
 
       {/* ─── Cost of living ───────────────────────────────────── */}
       <section className="py-20 sm:py-24 bg-surface-50 dark:bg-surface-900/40 border-y border-surface-200 dark:border-surface-800">
@@ -686,33 +568,6 @@ export default function LandingPage() {
                     <ArrowRight className="w-4 h-4" />
                   </span>
                 </Link>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── How it works ─────────────────────────────────────── */}
-      <section className="py-20 sm:py-24 bg-surface-50 dark:bg-surface-900/40 border-y border-surface-200 dark:border-surface-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="max-w-2xl">
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.02em] text-surface-900 dark:text-white">
-              Three steps, start to offer
-            </h2>
-          </Reveal>
-
-          <div className="mt-14 grid md:grid-cols-3 gap-8">
-            {steps.map((s, i) => (
-              <Reveal key={s.n} delay={i * 0.08}>
-                <div>
-                  <span className="text-5xl font-extrabold text-primary-200 dark:text-primary-900 tabular-nums">
-                    {s.n}
-                  </span>
-                  <h3 className="mt-3 text-xl font-bold text-surface-900 dark:text-white">{s.title}</h3>
-                  <p className="mt-2.5 text-sm leading-relaxed text-surface-600 dark:text-surface-400 max-w-xs">
-                    {s.body}
-                  </p>
-                </div>
               </Reveal>
             ))}
           </div>

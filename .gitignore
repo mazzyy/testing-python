@@ -182,3 +182,6 @@ build/
 .pytest_cache/
 __pycache__/
 .claude/
+
+# Azure deployment secrets
+deploy/azure/.env.azure

@@ -56,6 +56,10 @@ class Settings(BaseSettings):
     SMTP_FROM_NAME: str = "UniAdvisor"
     SMTP_USE_TLS: bool = True
     
+    # Default admin bootstrap (read from .env by pydantic, NOT os.environ)
+    ADMIN_EMAIL: str = "admin@daad.de"
+    ADMIN_PASSWORD: str = ""
+    
     @validator("DATABASE_URL", pre=True)
     def fix_heroku_postgres_url(cls, v: str) -> str:
         """

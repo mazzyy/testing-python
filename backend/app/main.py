@@ -40,13 +40,13 @@ def create_default_admin():
     """Create default admin user if not exists"""
     import os
     
-    admin_email = os.getenv("ADMIN_EMAIL", "admin@daad.de")
+    admin_email = settings.ADMIN_EMAIL
     # Default password only for dev if not provided, but we should encourage env var
     # For security audit compliance, we prefer no hardcoded default in code, 
     # but to avoid breaking existing dev setups without .env, we'll check carefully.
     
     # Secure approach: Get from env, if not present, do not create default admin or log warning.
-    admin_password = os.getenv("ADMIN_PASSWORD")
+    admin_password = settings.ADMIN_PASSWORD
     
     if not admin_password:
         print("[WARN] ADMIN_PASSWORD not set. Skipping default admin creation.")

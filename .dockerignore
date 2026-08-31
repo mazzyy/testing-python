@@ -14,3 +14,20 @@ __pycache__/
 .env
 tests/
 backend/data/
+
+# --- deployment hygiene (added for Azure) ---
+# Vector store is rebuilt/persisted at runtime, never baked into the image
+backend/chroma_db/
+backend/chroma_db_backup/
+backend/uploads/
+logs/
+*.log
+
+# 18MB of program data lives in Postgres, not the image — but the startup
+# scholarship seeder reads this one file, so keep it.
+!backend/data/daad_scholarships_detailed.json
+
+# Local dev artefacts
+frontend/dist/
+deploy/azure/.env.azure
+_stage_fe.tgz
