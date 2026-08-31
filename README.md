@@ -1,8 +1,8 @@
-# UniAdvisorAI — AI-Powered Study in Germany Platform 
+# CampusConsul
 
 <div align="center">
 
-**The only AI-powered platform that combines personalized German university matching with comprehensive application tracking — for free.**
+**CampusConsul helps students search universities, compare programs, and manage their application journey in Germany with AI-powered support.**
 
 [![React](https://img.shields.io/badge/React-18.2-61DAFB?logo=react&logoColor=white)](https://reactjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -15,48 +15,47 @@
 
 ---
 
-## 📌 Overview
+## Overview
 
-**UniAdvisorAI** is a comprehensive, AI-powered web application designed to revolutionize how international students discover, evaluate, and apply to German university programs. By combining **RAG-based AI matching** (Retrieval Augmented Generation using Azure OpenAI GPT-4 and ChromaDB), **end-to-end application tracking**, **AI document generation**, and **scholarship matching**, the platform addresses every stage of the study abroad journey — from program discovery to visa approval.
+CampusConsul is a student-focused platform built to make studying in Germany easier. It brings together program discovery, personalized recommendations, application tracking, scholarships, visa guidance, and document tools in one place.
+
+The goal is simple: help international students make better decisions, stay organized, and move through each step with less stress.
 
 ### Who is this for?
 
-| Persona | Description | Key Features Used |
-|---------|-------------|-------------------|
-| **International Student** | Looking for Master's/PhD programs in Germany | AI Recommendations, Application Tracker, SOP/CV Generator |
-| **Career Switcher** | Transitioning fields via a German degree | AI matching considers work experience, eligibility checker |
-| **University Admin** | Managing international applications | Admin Dashboard, token analytics, user management |
+- International students exploring master’s or PhD programs in Germany
+- Students who want help matching their profile with the right universities
+- Applicants tracking documents, deadlines, and visa steps
+- People looking for scholarships, cost estimates, and study guidance
 
-### Target Markets (15+ Countries)
+### Main markets
 
-**Primary:** Pakistan · India · Bangladesh 
-**Secondary:** Nigeria · Kenya · Egypt · Vietnam · Indonesia 
-**Expansion:** Turkey · Iran · China · USA · UK · Canada · Russia
+- Pakistan
+- India
+- Bangladesh
+- Nigeria
+- Kenya
+- Egypt
+- Vietnam
+- Indonesia
+- And other international student markets interested in Germany
 
 ---
 
-## Features at a Glance
+## Features at a glance
 
-| # | Feature | Description | Status |
-|---|---------|-------------|--------|
-| 1 | [Smart Program Discovery](#1--smart-program-discovery) | Browse & filter 2500+ programs with semantic search | Live |
-| 2 | [AI-Powered Recommendations](#2--ai-powered-recommendations--chat) | GPT-4 + RAG personalized matching with Two-Step Evaluation | Live |
-| 3 | [AI Chat Advisor](#2--ai-powered-recommendations--chat) | Conversational Q&A about programs | Live |
-| 4 | [Application Tracker](#3--application-tracker) | 7-phase checklist with country-specific workflows | Live |
-| 5 | [AI SOP Generator](#4--ai-tools-suite) | Generate tailored Statements of Purpose | Live |
-| 6 | [AI CV Generator](#4--ai-tools-suite) | Build German-style CVs with AI feedback | Live |
-| 7 | [German Grade Calculator](#4--ai-tools-suite) | Modified Bavarian Formula converter | Live |
-| 8 | [Scholarship Matching](#5--scholarship-matching) | Scholarships with AI eligibility scoring | Live |
-| 9 | [Document Vault](#6--document-vault) | Secure document storage & credential management | Live |
-| 10 | [Cost of Living Calculator](#7--cost-of-living-calculator) | City-specific expense estimates | Live |
-| 11 | [Visa Guide](#8--visa-guide--country-guides) | Step-by-step visa process for each country | Live |
-| 12 | [Country Guides](#8--visa-guide--country-guides) | SEO-optimized per-country study guides | Live |
-| 13 | [University Explorer](#9--university-explorer) | University listings with detail pages | Live |
-| 14 | [Community Hub](#10--community-hub) | Forum with posts, comments, voting | Live |
-| 15 | [Notifications System](#11--notifications--reminders) | In-app + email notifications with scheduling | Live |
-| 16 | [Admin Dashboard](#12--admin-dashboard) | User management, token analytics, data imports | Live |
-| 17 | [Document Intelligence](#13--document-intelligence) | AI-powered transcript/CV parsing via OCR | Live |
-| 18 | [SEO & AEO](#14--seo--aeo) | Structured data, meta tags, hreflang support | Live |
+| Feature | What it does |
+|---------|--------------|
+| Program discovery | Search and compare German universities and courses |
+| AI recommendations | Match your profile to relevant programs |
+| Application tracker | Keep track of your progress across key steps |
+| SOP and CV tools | Create helpful application documents with AI support |
+| Scholarship matching | Find scholarships that fit your background |
+| Document vault | Store and manage important files in one place |
+| Visa and country guides | Understand requirements and next steps |
+| Cost of living calculator | Estimate living costs in different cities |
+| Community hub | Learn from other students and ask questions |
+| Admin dashboard | Manage users, content, and platform activity |
 
 ---
 
@@ -79,7 +78,7 @@ Browse and filter **500+ German university programs** with advanced search capab
 
 ---
 
-### 2. AI-Powered Recommendations & Chat Nova Nova
+### 2. AI-Powered Recommendations & Chat
 
 Personalized program matching using **Azure OpenAI GPT-4** and **RAG pipeline**.
 
@@ -95,7 +94,7 @@ Personalized program matching using **Azure OpenAI GPT-4** and **RAG pipeline**.
 **Chat Nova Interface:**
 Chat Nova is your personal AI study abroad assistant, created by Musawar. It helps you navigate the complexities of studying in Germany with ease.
 
-- **How it works:** Nova is grounded in the UniAdvisor database and your personal profile. It understands your academic background and preferences to provide tailored advice, from program searches to visa application steps.
+- **How it works:** Nova is grounded in the CampusConsul database and your personal profile. It understands your academic background and preferences to provide tailored advice, from program searches to visa application steps.
 - **Context-aware:** Uses your profile + program database for answers
 - **Interactive:** Full conversational interface with markdown rendering
 - **Persona:** Friendly, knowledgeable, and encouraging guide
@@ -492,7 +491,7 @@ graph TB
 ## 📂 Project Structure
 
 ```
-UniAdvisorAI/
+CampusConsul/
 ├── backend/
 │ ├── app/
 │ │ ├── main.py     # FastAPI entry point, lifespan events
@@ -701,7 +700,7 @@ erDiagram
 
 ## RAG & AI Workflow
 
-UniAdvisorAI uses **Retrieval Augmented Generation (RAG)** to provide accurate, hallucination-free program recommendations.
+CampusConsul uses **Retrieval Augmented Generation (RAG)** to provide accurate, hallucination-free program recommendations.
 
 ### How It Works
 
@@ -960,8 +959,8 @@ All endpoints are prefixed with `/api` unless otherwise noted.
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/your-repo/UniAdvisorAI.git
-cd UniAdvisorAI
+git clone https://github.com/your-repo/CampusConsul.git
+cd CampusConsul
 ```
 
 ### 2. Backend Setup
@@ -1187,7 +1186,7 @@ Every Azure OpenAI API call is logged with:
 
 ## License
 
-This project is developed for educational purposes as part of the UniAdvisorAI platform initiative.
+This project is developed for educational purposes as part of the CampusConsul initiative.
 
 ---
 

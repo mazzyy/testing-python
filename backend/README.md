@@ -1,8 +1,8 @@
-# ⚙️ UniAdvisorAI — Backend
+# ⚙️ CampusConsul Backend
 
 <div align="center">
 
-**FastAPI-powered backend with RAG-based AI recommendations, JWT auth, and comprehensive application tracking.**
+**FastAPI-powered backend for program discovery, AI recommendations, and application tracking for students planning to study in Germany.**
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org/)
@@ -193,8 +193,8 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 | `SMTP_PORT` | SMTP port | No | `587` |
 | `SMTP_USER` | SMTP username | No | `""` |
 | `SMTP_PASSWORD` | SMTP password | No | `""` |
-| `SMTP_FROM_EMAIL` | Sender email address | No | `noreply@uniadvisor.com` |
-| `SMTP_FROM_NAME` | Sender display name | No | `UniAdvisor` |
+| `SMTP_FROM_EMAIL` | Sender email address | No | `noreply@campusconsul.com` |
+| `SMTP_FROM_NAME` | Sender display name | No | `CampusConsul` |
 | `SMTP_USE_TLS` | Enable TLS for SMTP | No | `true` |
 | `DEBUG` | Enable debug mode | No | `true` |
 
@@ -563,4 +563,4 @@ docker run -p 8000:8000 --env-file .env uniadvisor-backend
 
 ## 📝 License
 
-This project is part of the UniAdvisorAI platform.
+This project is part of the CampusConsul platform.

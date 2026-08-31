@@ -28,6 +28,10 @@ STATE="$ROOT/deploy/azure/.env.azure"
 ENV_FILE="$ROOT/backend/.env"
 
 LOCATION="${LOCATION:-germanywestcentral}"
+# Postgres Flexible Server is capacity-restricted in some regions on trial and
+# student subscriptions ("The location is restricted from performing this
+# operation"). Try candidates in order and keep whichever succeeds.
+PG_LOCATION_CANDIDATES="${PG_LOCATION:-} ${LOCATION} westeurope northeurope swedencentral francecentral uksouth eastus"
 PLAN_SKU="${PLAN_SKU:-B1}"          # B1 = 1.75GB. Bump to B2 if the app OOMs.
 PG_SKU="${PG_SKU:-Standard_B1ms}"
 PG_TIER="${PG_TIER:-Burstable}"
@@ -136,30 +140,63 @@ build_image() {
 
 create_pg() {
   step "PostgreSQL flexible server"
+
   if az postgres flexible-server show -n "$PG" -g "$RG" >/dev/null 2>&1; then
     ok "$PG exists"
+    PG_LOCATION="$(az postgres flexible-server show -n "$PG" -g "$RG" --query location -o tsv)"
   else
-    warn "provisioning Postgres — usually 3–5 minutes"
-    az postgres flexible-server create \
-      --name "$PG" --resource-group "$RG" --location "$LOCATION" \
-      --admin-user "$PG_ADMIN" --admin-password "$PG_PASSWORD" \
-      --sku-name "$PG_SKU" --tier "$PG_TIER" \
-      --storage-size "$PG_STORAGE" --version "$PG_VERSION" \
-      --public-access 0.0.0.0 \
-      --yes -o none
-    ok "created $PG"
+    warn "provisioning Postgres — usually 3–5 minutes per attempt"
+    local created="" errfile
+    errfile="$(mktemp)"
+
+    for region in $PG_LOCATION_CANDIDATES; do
+      [ -n "$region" ] || continue
+      printf "  trying %s ... " "$region"
+      if az postgres flexible-server create \
+          --name "$PG" --resource-group "$RG" --location "$region" \
+          --admin-user "$PG_ADMIN" --admin-password "$PG_PASSWORD" \
+          --sku-name "$PG_SKU" --tier "$PG_TIER" \
+          --storage-size "$PG_STORAGE" --version "$PG_VERSION" \
+          --public-access 0.0.0.0 \
+          --yes -o none 2>"$errfile"; then
+        printf "%sok%s\n" "$CG" "$C0"
+        created="$region"
+        break
+      fi
+      if grep -qi "restricted\|not available\|NotAvailable\|quota" "$errfile"; then
+        printf "%srestricted%s\n" "$CY" "$C0"
+      else
+        printf "%sfailed%s\n" "$CR" "$C0"
+        sed 's/^/      /' "$errfile" | head -4
+      fi
+    done
+    rm -f "$errfile"
+
+    [ -n "$created" ] || die "no candidate region accepted a Postgres server. Try: PG_LOCATION=<region> ./deploy/azure/deploy.sh"
+    PG_LOCATION="$created"
+    ok "created $PG in $PG_LOCATION"
+
+    # Remember it so re-runs and the app land in the same place
+    if grep -q '^PG_LOCATION=' "$STATE" 2>/dev/null; then
+      python3 - "$STATE" "$PG_LOCATION" <<'PYEOF'
+import re, sys
+p, loc = sys.argv[1], sys.argv[2]
+s = open(p).read()
+open(p, "w").write(re.sub(r'^PG_LOCATION=.*$', f'PG_LOCATION="{loc}"', s, flags=re.M))
+PYEOF
+    else
+      printf 'PG_LOCATION="%s"\n' "$PG_LOCATION" >> "$STATE"
+    fi
   fi
 
   az postgres flexible-server db create \
     -g "$RG" -s "$PG" -d "$PG_DB" -o none 2>/dev/null || true
   ok "database $PG_DB ready"
 
-  # Let Azure services (App Service) reach it
   az postgres flexible-server firewall-rule create \
     -g "$RG" -n "$PG" --rule-name AllowAzureServices \
     --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0 -o none 2>/dev/null || true
 
-  # And this machine, so you can run the seed scripts
   local myip
   myip="$(curl -s https://api.ipify.org || true)"
   if [ -n "$myip" ]; then
@@ -180,8 +217,9 @@ db_url() {
 create_webapp() {
   step "App Service"
   if ! az appservice plan show -n "$PLAN" -g "$RG" >/dev/null 2>&1; then
-    az appservice plan create -n "$PLAN" -g "$RG" --is-linux --sku "$PLAN_SKU" -o none
-    ok "created plan $PLAN ($PLAN_SKU)"
+    az appservice plan create -n "$PLAN" -g "$RG" --is-linux --sku "$PLAN_SKU" \
+      --location "${PG_LOCATION:-$LOCATION}" -o none
+    ok "created plan $PLAN ($PLAN_SKU) in ${PG_LOCATION:-$LOCATION}"
   else ok "plan $PLAN exists"; fi
 
   local acr_pw

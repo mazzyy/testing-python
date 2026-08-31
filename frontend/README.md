@@ -1,8 +1,8 @@
-# 🎨 UniAdvisorAI — Frontend
+# 🎨 CampusConsul Frontend
 
 <div align="center">
 
-**Modern React + TypeScript frontend with AI-powered tools, application tracking, and rich animations.**
+**Modern React + TypeScript frontend for discovering programs, tracking applications, and getting AI guidance for studying in Germany.**
 
 [![React](https://img.shields.io/badge/React-18.2-61DAFB?logo=react&logoColor=white)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -443,10 +443,10 @@ The `SEO` component (`components/common/SEO.tsx`) wraps every page with:
   schema={{
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "UniAdvisorAI"
+    "name": "CampusConsul"
   }}
   hreflangs={[
-    { lang: "en", href: "https://uniadvisor.com/programs" }
+    { lang: "en", href: "https://campusconsul.com/programs" }
   ]}
 />
 ```
@@ -604,4 +604,4 @@ const mutation = useMutation({
 
 ## 📝 License
 
-This project is part of the UniAdvisorAI platform.
+This project is part of the CampusConsul platform.
